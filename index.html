@@ -143,7 +143,7 @@ footer{padding:24px 0 48px;color:var(--muted);font-size:.85rem}
 
   <section id="videos">
     <h2>Videos</h2>
-    <p>Side-by-side clips across datasets and deviation types. More scenarios are being added.</p>
+    <p>Side-by-side clips across datasets and deviation types: lane changes, camera height, heading, a different city (EUVS / MARS), nuScenes in the HUGSIM simulator, and a closed-loop driving run. Each clip says whether a real camera frame exists at that viewpoint. More are being added.</p>
     <div id="video-grid" class="grid"><p class="meta">Loading videos…</p></div>
   </section>
 
@@ -188,7 +188,9 @@ footer{padding:24px 0 48px;color:var(--muted);font-size:.85rem}
     list.forEach(function(v){
       var d=document.createElement('div'); d.className='card';
       d.innerHTML='<video controls muted playsinline preload="metadata" src="'+esc(v.file)+'"></video>'+
-        '<h3>'+esc(v.title)+'</h3><p class="meta">'+esc(v.scenario)+' · '+esc(v.dataset)+'</p>'+
+        '<h3>'+esc(v.title)+'</h3><p class="meta">'+esc(v.scenario)+' · '+esc(v.dataset)+
+        (v.real_ground_truth===true?' · <b>real ground truth</b>':(v.real_ground_truth===false?' · no real frame (visual check)':''))+'</p>'+
+        (v.shown?'<p class="meta">Panels: '+esc(v.shown)+'</p>':'')+
         '<p>'+esc(v.caption)+'</p><p class="meta">'+esc(v.attribution)+'</p>';
       grid.appendChild(d);
     });

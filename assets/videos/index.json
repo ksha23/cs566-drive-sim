@@ -1,18 +1,102 @@
 [
-  {
-    "file": "assets/videos/flythrough_progressive.mp4",
-    "title": "Progressive update: the 3D scene itself becomes more faithful",
-    "scenario": "Lateral offset, straight road with crosswalk",
-    "dataset": "Para-Lane (scene 16)",
-    "caption": "Left: original splat rendered off the recorded path. Right: the same splat after Difix3D+-style progressive refinement with a fine-tuned Difix (no fixer applied at render time).",
-    "attribution": "Para-Lane (CC BY-NC 4.0)"
-  },
-  {
-    "file": "assets/videos/flythrough_unet.mp4",
-    "title": "Our small from-scratch fixer",
-    "scenario": "Lateral offset, straight road",
-    "dataset": "Para-Lane (scene 16)",
-    "caption": "Raw splat vs. our 15M-parameter U-Net fixer. It invents little but blurs and erases real lane paint.",
-    "attribution": "Para-Lane (CC BY-NC 4.0)"
-  }
+ {
+  "file": "assets/videos/paralane_straight_3m_scene16.mp4",
+  "title": "Straight road, one lane over (~3.3 m)",
+  "scenario": "lateral offset, straight road",
+  "dataset": "Para-Lane",
+  "shown": "real adjacent-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
+  "caption": "The splat was fitted on lane 0 only and is rendered where lane 1 actually drove. Released Difix sharpens but does not restore the missing lane paint; our driving-trained Difix restores most lane lines; the small U-Net blurs. Cars differ between passes (the lanes were driven at different times).",
+  "real_ground_truth": true,
+  "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
+ },
+ {
+  "file": "assets/videos/lane_change_sweep_0_3_6m.mp4",
+  "title": "Lane change: sliding the camera 0 -> 3 -> 6 m off the recorded lane",
+  "scenario": "continuous lateral sweep",
+  "dataset": "Para-Lane",
+  "shown": "nearest real frame (only on the two real lanes) | raw | released Difix | our Difix (ref) | our U-Net | road prior | progressive splat",
+  "caption": "The camera slides from the recorded lane to the next lane (3.3 m) and the one after (6.2 m). Real frames exist only where Para-Lane actually drove (shown as the nearest real frame of that lane, driven at another time, so traffic differs); in between there is no ground truth.",
+  "real_ground_truth": true,
+  "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
+ },
+ {
+  "file": "assets/videos/paralane_far_lane_7m_scene17.mp4",
+  "title": "Two lanes over (~7.7 m), the widest Para-Lane test offset",
+  "scenario": "lateral offset, far lane",
+  "dataset": "Para-Lane",
+  "shown": "real far-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
+  "caption": "At 7.7 m the splat has never seen most of the road surface. Every fixer produces a cleaner-looking image, but none recovers the real lane geometry reliably; lane agreement stays low (RESULTS section 5).",
+  "real_ground_truth": true,
+  "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
+ },
+ {
+  "file": "assets/videos/camera_height_sweep_pm1m.mp4",
+  "title": "Camera height sweep: -1 m to +1 m",
+  "scenario": "camera height",
+  "dataset": "Para-Lane",
+  "shown": "(no real frame) | recorded real frame at 0 m | raw | released Difix | our Difix (ref) | our U-Net | NVIDIA Fixer",
+  "caption": "Lower or higher cameras (a sports car, a truck) see the road at a different angle. There is no real frame at another height, so this is a visual check only; the report scores the road region against a road-plane warp (RESULTS section 12) and against real car/scooter pairs on MV2.",
+  "real_ground_truth": false,
+  "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
+ },
+ {
+  "file": "assets/videos/heading_sweep_pm15deg.mp4",
+  "title": "Heading sweep: turning the camera +-15 deg",
+  "scenario": "heading (yaw) about the camera centre",
+  "dataset": "Para-Lane",
+  "shown": "real frame rotated by the exact homography (black = never seen by the real camera) | raw | released Difix | our Difix (ref) | our U-Net | NVIDIA Fixer",
+  "caption": "For a pure rotation the real frame can be warped exactly; black regions are parts of the scene the recorded camera never saw. Inside the seen region every method stays close to the real frame (heading is not what breaks the splat); the newly revealed regions at the image border are where splats and fixers improvise.",
+  "real_ground_truth": true,
+  "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
+ },
+ {
+  "file": "assets/videos/progressive_before_after_scene16.mp4",
+  "title": "Progressive 3D update: before / after (no fixer at render time)",
+  "scenario": "progressive update",
+  "dataset": "Para-Lane",
+  "shown": "real | original splat | refined without fixer (control) | progressive with Difix-FT | progressive with our Difix",
+  "caption": "The splat itself is refined with fixed pseudo-views at +-3 m and +-6 m (Difix3D+ progressive update), then rendered WITHOUT any fixer. On scene_16 the lane lines come back in 3D (lane F1 0.18 -> 0.90 at ~3 m); on scene_17 the same procedure helps far less, so this gain is scene-dependent.",
+  "real_ground_truth": true,
+  "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
+ },
+ {
+  "file": "assets/videos/road_prior_before_after_scene16.mp4",
+  "title": "Road-surface prior: before / after (no generative model)",
+  "scenario": "road prior",
+  "dataset": "Para-Lane",
+  "shown": "real | raw splat | splat fitted with the LiDAR road-surface prior",
+  "caption": "A height/slope field fitted to LiDAR pulls road Gaussians onto the road plane and flattens them. No generative model is involved, so nothing can be invented; lane lines are sharper off-path.",
+  "real_ground_truth": true,
+  "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
+ },
+ {
+  "file": "assets/videos/euvs_mars_L3.mp4",
+  "title": "EUVS / MARS: a different route through the same place (transfer)",
+  "scenario": "translation + rotation (EUVS level 3), transfer",
+  "dataset": "EUVS (MARS)",
+  "shown": "real test frame | raw splat | released Difix-ref | NVIDIA Fixer | our Difix (ref) | our U-Net",
+  "caption": "The test traversal takes another route through the same place (median 5.5 m and 89 deg from the nearest training camera). Only the released, generically trained fixers help here; our Para-Lane-trained models do not transfer (RESULTS section 13).",
+  "real_ground_truth": true,
+  "attribution": "Data: EUVS benchmark (ICCV 2025) MARS scenes (MARS, CVPR 2024; CC BY-NC-SA 4.0). CS 566, non-commercial."
+ },
+ {
+  "file": "assets/videos/hugsim_nuscenes_offsets.mp4",
+  "title": "HUGSIM (nuScenes): shifting the ego car 0 -> 3 m",
+  "scenario": "lateral offset in a released simulator scene",
+  "dataset": "nuScenes via HUGSIM",
+  "shown": "(no real frame) | raw HUGSIM render | released Difix | NVIDIA Fixer | Difix-FT | our U-Net",
+  "caption": "HUGSIM's released reconstruction rendered 0-3 m off the logged path. Detector agreement with the 0 m render falls ~16% by 3 m; NVIDIA Fixer recovers most, our Para-Lane-trained models do not transfer (our U-Net washes out vehicles; RESULTS section 8).",
+  "real_ground_truth": false,
+  "attribution": "Data: HUGSIM released nuScenes scenes (MIT); nuScenes by Motional, CC BY-NC-SA 4.0. CS 566, non-commercial."
+ },
+ {
+  "file": "assets/videos/hugsim_closed_loop_ltf.mp4",
+  "title": "HUGSIM closed loop with the LTF policy (no fixer)",
+  "scenario": "closed-loop driving in the simulator",
+  "dataset": "nuScenes via HUGSIM",
+  "shown": "policy's three front camera views + bird's-eye view (ego, other vehicles, planned path)",
+  "caption": "One closed-loop rollout (hard scenario, seed 0): HD-Score 0.78, route completion 1.00. Played at 5 fps (sim runs at 4 Hz). Across 25 scenarios x 3 seeds the no-fixer HD-Score is 0.41 (RESULTS section 8).",
+  "real_ground_truth": false,
+  "attribution": "Data: HUGSIM released nuScenes scenes (MIT); nuScenes by Motional, CC BY-NC-SA 4.0. CS 566, non-commercial."
+ }
 ]
