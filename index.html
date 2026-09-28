@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Off-Path Splat Simulation Trust</title>
+<meta name="description" content="CS 566 project: how far off the recorded path can a Gaussian-splat driving simulator be trusted? Kyle Sha and Allen Xia, UW–Madison, Fall 2026.">
+<style>
+:root{
+  --bg:#ffffff; --fg:#16181d; --muted:#5b6270; --line:#e3e6eb; --card:#f6f7f9;
+  --accent:#1f5fbf; --accent-soft:#e8f0fc; --warn:#9a5b00; --warn-soft:#fff4e0;
+  --maxw:1080px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111317; --fg:#e7e9ee; --muted:#a3aab8; --line:#2a2f38; --card:#191c22;
+    --accent:#7fb0ff; --accent-soft:#1a2740; --warn:#f0b35c; --warn-soft:#2a2112;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111317; --fg:#e7e9ee; --muted:#a3aab8; --line:#2a2f38; --card:#191c22;
+  --accent:#7fb0ff; --accent-soft:#1a2740; --warn:#f0b35c; --warn-soft:#2a2112;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 16px}
+header{padding:48px 0 24px;border-bottom:1px solid var(--line)}
+h1{font-size:clamp(1.6rem,3.6vw,2.4rem);line-height:1.2;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 16px}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-block;padding:6px 12px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--fg);background:var(--card);font-size:.92rem}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.off{color:var(--muted);cursor:default}
+section{padding:32px 0;border-bottom:1px solid var(--line)}
+h2{font-size:1.4rem;margin:0 0 12px}
+h3{font-size:1.08rem;margin:20px 0 8px}
+p{margin:8px 0}
+.tldr{background:var(--accent-soft);border-radius:12px;padding:16px 20px}
+.tldr ul{margin:4px 0 0;padding-left:20px}
+.note{background:var(--warn-soft);color:var(--fg);border-left:4px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:.95rem}
+figure{margin:16px 0;max-width:100%;min-width:0}
+figure img,video{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:var(--card)}
+figcaption{color:var(--muted);font-size:.9rem;margin-top:6px}
+.strip{overflow-x:auto;max-width:100%}
+.strip img{min-width:900px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.card h3{margin:8px 0 4px;font-size:1rem}
+.meta{color:var(--muted);font-size:.85rem;margin:0}
+.steps{counter-reset:s;list-style:none;padding:0;display:grid;gap:10px}
+.steps li{counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px 10px 48px;position:relative}
+.steps li::before{content:counter(s);position:absolute;left:14px;top:10px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.tablewrap{overflow-x:auto}
+.refs{font-size:.9rem;color:var(--muted)}
+.refs li{margin:3px 0}
+footer{padding:24px 0 48px;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>How Far Off the Recorded Path Can a Gaussian-Splat Driving Simulator Be Trusted?</h1>
+    <p class="sub">Kyle Sha and Allen Xia · CS 566 Computer Vision · University of Wisconsin–Madison · Fall 2026</p>
+    <div class="links">
+      <a class="btn primary" href="docs/proposal.pdf">Proposal (PDF)</a>
+      <span class="btn off" title="Due Oct 29">Mid-term report (Oct 29)</span>
+      <span class="btn off" title="Dec 1–10">Presentation (Dec)</span>
+      <span class="btn off" title="Released with the final report">Code (released Dec 10)</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section>
+    <figure class="strip">
+      <img src="assets/figures/panel_3m_s16.jpg" alt="A road rendered about 3 m to the side of the recorded path: real photo, raw splat, several fixers">
+      <figcaption>About 3 m off the recorded path. From left: the <b>real</b> photo from the adjacent lane, the raw splat render, released Difix, Difix fine-tuned on driving data, our small U-Net, and the progressively refined splats. Scroll sideways on small screens.</figcaption>
+    </figure>
+    <div class="tldr">
+      <b>In short</b>
+      <ul>
+        <li>Driving stacks are tested in simulators rebuilt from real drives. When the simulated car leaves the recorded path, the rendered camera images degrade.</li>
+        <li>Generative "fixers" (e.g., NVIDIA's Difix3D+) make those images look better, but <b>better-looking is not the same as correct</b>: they can invent lane lines and cars.</li>
+        <li>Using real multi-lane recordings, we measure <b>how quickly trust decays</b> as the camera moves sideways or changes height, and which fixers help or hallucinate. We reimplement Difix3D+ ourselves and train a small fixer from scratch.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="problem">
+    <h2>Problem and motivation</h2>
+    <p>A Gaussian splat reconstructed from one drive is accurate along the path the car recorded, but the recording camera never saw most of the scene from anywhere else. A driving policy tested in the simulator will deviate from the log (a lane change, a swerve), and a different vehicle may carry its camera higher (a truck) or lower. If the rendered images are wrong there, the simulator's verdict on the driving stack is wrong too.</p>
+    <p>Recent work repairs these renders with diffusion-based fixers. Most papers judge them with perceptual image scores, which reward realistic-looking images. We ask whether they make the simulator more <em>trustworthy</em>: do lane detectors and car detectors see the same things they would in reality?</p>
+    <p class="note">What makes this measurable: the <b>Para-Lane</b> dataset scans the same roads in three parallel lanes (about 3.3 m and 6.3 m apart), so we have <b>real photos at off-path viewpoints</b> to compare against.</p>
+  </section>
+
+  <section id="approach">
+    <h2>Approach</h2>
+    <ol class="steps">
+      <li><b>Rebuild real drives as 3D Gaussian splats</b> (Para-Lane, plus EUVS, MV2 and HUGSIM's nuScenes scenes) and render them from new camera positions: sideways, turned, higher or lower.</li>
+      <li><b>Make training pairs:</b> render one lane's scene from the neighbouring lane's camera positions and pair each render with that lane's real photo.</li>
+      <li><b>Fixers compared:</b> NVIDIA's released Difix and Fixer; <b>our own reimplementation of Difix3D+'s training</b>; a <b>small U-Net trained from scratch</b>; Difix3D+'s progressive update (fixed images fed back into the 3D scene); FaithFusion's confidence weighting; and a purely geometric road-surface prior.</li>
+      <li><b>Measure trust vs. deviation:</b> image quality against the real photos, hallucination (invented or erased lane paint, fake cars), agreement of a lane detector (CLRNet) and a car detector (YOLO), and a closed-loop driving policy in the HUGSIM simulator.</li>
+    </ol>
+  </section>
+
+  <section id="results">
+    <h2>Pilot results (Sep 28, 2026)</h2>
+    <p>These come from a working prototype built before the proposal deadline; the full study follows the timetable in the proposal.</p>
+    <figure>
+      <img src="assets/figures/trust_vs_offset.png" alt="Trust metrics vs. lateral offset for each fixer">
+      <figcaption><b>Trust vs. sideways offset</b> on two held-out test scenes, against real adjacent-lane photos (95% bootstrap intervals). Lane agreement with the real photo collapses from about 0.98 on the path to under 0.1 at 3 m for the raw render.</figcaption>
+    </figure>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>Finding</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td>Trust collapses quickly off the path</td><td>Lane-detector agreement 0.98 on-path → 0.07 at ~3 m → 0.02 at ~6 m (raw splat)</td></tr>
+        <tr><td>Off-the-shelf fixers look better but aren't more faithful</td><td>Released Difix improves perceptual scores; lane-paint accuracy stays at the raw level</td></tr>
+        <tr><td>Fixers trained on our driving pairs are most faithful, but invent cars</td><td>Our Difix reimplementation: lane agreement 0.59 at ~3 m, but 0.18 fake vehicles per image vs. 0.04 raw</td></tr>
+        <tr><td>Refining the 3D scene itself can work, but depends on the scene</td><td>Progressive update: lane F1 0.18 → 0.91 on one test scene, small gain on the other</td></tr>
+        <tr><td>Geometry helps without hallucinating</td><td>Road-surface prior: lane agreement 0.18 → 0.41 at ~3 m, no generative model involved</td></tr>
+        <tr><td>Trained fixers don't transfer to other cities</td><td>On EUVS (MARS, US), fixers trained on Para-Lane are no better, or worse, than the raw render</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3>Other deviation axes</h3>
+    <figure>
+      <img src="assets/figures/trust_vs_heading_height.png" alt="Trust vs. lateral offset, heading and camera height">
+      <figcaption>Lateral offset, heading (turning the camera) and camera height side by side. Height changes hurt almost as much as sideways shifts; turning mostly doesn't, except in regions the recording camera never saw.</figcaption>
+    </figure>
+    <div class="grid">
+      <figure class="card strip"><img src="assets/figures/panel_6m.jpg" alt="About 6 m off-path comparison"><figcaption>About 6 m off the path: the raw render is heavily smeared.</figcaption></figure>
+      <figure class="card strip"><img src="assets/figures/panel_height1m.jpg" alt="Camera raised by 1 m"><figcaption>Camera raised 1 m (a truck-mounted camera).</figcaption></figure>
+      <figure class="card strip"><img src="assets/figures/panel_yaw10.jpg" alt="Camera turned 10 degrees"><figcaption>Camera turned 10°: note the artifacts at the edge the recording never saw.</figcaption></figure>
+      <figure class="card strip"><img src="assets/figures/panel_0m.jpg" alt="On the recorded path"><figcaption>On the recorded path, for reference: every method looks close to the real photo.</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="videos">
+    <h2>Videos</h2>
+    <p>Side-by-side clips across datasets and deviation types. More scenarios are being added.</p>
+    <div id="video-grid" class="grid"><p class="meta">Loading videos…</p></div>
+  </section>
+
+  <section id="status">
+    <h2>Status and deliverables</h2>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>Milestone</th><th>Date</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Proposal</td><td>Sep 29</td><td><a href="docs/proposal.pdf">Final (PDF)</a></td></tr>
+        <tr><td>Mid-term report</td><td>Oct 29</td><td>Planned</td></tr>
+        <tr><td>Presentation</td><td>Dec 1–10</td><td>Planned</td></tr>
+        <tr><td>Final webpage and code</td><td>Dec 10</td><td>This page; code released at the end</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3>Limitations so far</h3>
+    <p>The main results come from one city, one camera rig and daytime conditions, with two held-out test scenes; fixers trained there do not transfer to other datasets. Night, rain, dense traffic, side cameras and moving objects seen from new viewpoints are not yet covered. The hallucination metrics are proxies (lane paint and vehicles).</p>
+  </section>
+
+  <section id="references">
+    <h2>Main papers and data</h2>
+    <ol class="refs">
+      <li>Difix3D+: Improving 3D reconstructions with single-step diffusion models, CVPR 2025 — <a href="https://arxiv.org/abs/2503.01774">arXiv</a></li>
+      <li>FaithFusion: harmonizing reconstruction and generation via pixel-wise information gain, CVPR 2026 — <a href="https://arxiv.org/abs/2511.21113">arXiv</a></li>
+      <li>HUGSIM: a real-time, photo-realistic and closed-loop simulator for autonomous driving, TPAMI 2026 — <a href="https://arxiv.org/abs/2412.01718">arXiv</a></li>
+      <li>NVIDIA Fixer — <a href="https://github.com/nv-tlabs/Fixer">GitHub</a>; ReconDreamer (NTA/NTL-IoU metrics) — <a href="https://arxiv.org/abs/2411.19548">arXiv</a>; PRG-Fusion — <a href="https://arxiv.org/abs/2609.06948">arXiv</a></li>
+      <li>Para-Lane — <a href="https://arxiv.org/abs/2502.15635">arXiv</a>; EUVS — <a href="https://arxiv.org/abs/2412.05256">arXiv</a>; MV2 — <a href="https://arxiv.org/abs/2608.12442">arXiv</a></li>
+    </ol>
+    <p class="refs">Images and videos on this page are derived from Para-Lane (CC BY-NC 4.0), nuScenes via HUGSIM, EUVS/MARS and MV2, shown for non-commercial academic purposes. No datasets or model weights are distributed here.</p>
+  </section>
+</main>
+
+<footer><div class="wrap">CS 566, University of Wisconsin–Madison, Fall 2026. Kyle Sha and Allen Xia.</div></footer>
+
+<script>
+(function(){
+  var grid=document.getElementById('video-grid');
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  fetch('assets/videos/index.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(list){
+    grid.innerHTML='';
+    list.forEach(function(v){
+      var d=document.createElement('div'); d.className='card';
+      d.innerHTML='<video controls muted playsinline preload="metadata" src="'+esc(v.file)+'"></video>'+
+        '<h3>'+esc(v.title)+'</h3><p class="meta">'+esc(v.scenario)+' · '+esc(v.dataset)+'</p>'+
+        '<p>'+esc(v.caption)+'</p><p class="meta">'+esc(v.attribution)+'</p>';
+      grid.appendChild(d);
+    });
+  }).catch(function(){ grid.innerHTML='<p class="meta">Videos could not be loaded.</p>'; });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+[
+  {
+    "file": "assets/videos/flythrough_progressive.mp4",
+    "title": "Progressive update: the 3D scene itself becomes more faithful",
+    "scenario": "Lateral offset, straight road with crosswalk",
+    "dataset": "Para-Lane (scene 16)",
+    "caption": "Left: original splat rendered off the recorded path. Right: the same splat after Difix3D+-style progressive refinement with a fine-tuned Difix (no fixer applied at render time).",
+    "attribution": "Para-Lane (CC BY-NC 4.0)"
+  },
+  {
+    "file": "assets/videos/flythrough_unet.mp4",
+    "title": "Our small from-scratch fixer",
+    "scenario": "Lateral offset, straight road",
+    "dataset": "Para-Lane (scene 16)",
+    "caption": "Raw splat vs. our 15M-parameter U-Net fixer. It invents little but blurs and erases real lane paint.",
+    "attribution": "Para-Lane (CC BY-NC 4.0)"
+  }
+]
