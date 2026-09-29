@@ -30,6 +30,36 @@
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  },
  {
+  "file": "assets/videos/paralane_curve_scene14.mp4",
+  "title": "Curved road, two lanes over (about 5 m)",
+  "scenario": "lateral offset, curved road",
+  "dataset": "Para-Lane",
+  "shown": "real far-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
+  "caption": "A held-out test road that bends 30-50 deg over about 110 m. Lane 0's splat is rendered where lane 2 actually drove. Our driving-trained Difix draws crisp lane lines, but not always where the real ones are: plausible is not the same as faithful. (The on-screen offset label differs slightly from the 5.3 m median offset of this clip.)",
+  "real_ground_truth": true,
+  "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
+ },
+ {
+  "file": "assets/videos/paralane_under_highway_traffic_scene15.mp4",
+  "title": "Under an elevated highway, dense traffic (about 4 m over)",
+  "scenario": "lateral offset, hard shadows and traffic",
+  "dataset": "Para-Lane",
+  "shown": "real adjacent-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
+  "caption": "The hardest of the five test roads: hard shadows, pillars and the most traffic. Every method stays low here (best lane agreement 0.39 one lane over). Cars in the renders are whatever the splat and fixer produce; the lanes were driven at different times, so traffic differs from the real frame.",
+  "real_ground_truth": true,
+  "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
+ },
+ {
+  "file": "assets/videos/mv2_car_to_scooter.mp4",
+  "title": "MV2: car view to scooter view (another lane and a lower camera)",
+  "scenario": "lateral offset + camera height, real and simultaneous",
+  "dataset": "MV2",
+  "shown": "real scooter frame | raw splat (car views only) | released Difix | released Difix-ref | NVIDIA Fixer | our Difix (ref)",
+  "caption": "A car and a scooter drove the same street at the same time in different lanes (median 7.6 m apart), the scooter's camera about 0.4 m lower. The splat is built from the car only and compared with what the scooter really saw. No method recovers the lane geometry (lane agreement at most 0.09); NVIDIA Fixer invents the most vehicles (0.26-0.36 per image). Some renders are visibly offset, partly from the 7.6 m gap and possibly from pose or scale errors.",
+  "real_ground_truth": true,
+  "attribution": "Data: MV2 multi-vehicle dataset (arXiv 2608.12442), academic research use only. CS 566, non-commercial."
+ },
+ {
   "file": "assets/videos/camera_height_sweep_pm1m.mp4",
   "title": "Camera height sweep: -1 m to +1 m",
   "scenario": "camera height",

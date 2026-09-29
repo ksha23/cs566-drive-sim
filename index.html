@@ -106,32 +106,38 @@ footer{padding:24px 0 48px;color:var(--muted);font-size:.85rem}
       <li><b>Fixers compared:</b> NVIDIA's released Difix and Fixer; <b>our own reimplementation of Difix3D+'s training</b>; a <b>small U-Net trained from scratch</b>; Difix3D+'s progressive update (fixed images fed back into the 3D scene); FaithFusion's confidence weighting; and a purely geometric road-surface prior.</li>
       <li><b>Measure trust vs. deviation:</b> image quality against the real photos, hallucination (invented or erased lane paint, fake cars), agreement of a lane detector (CLRNet) and a car detector (YOLO), and a closed-loop driving policy in the HUGSIM simulator.</li>
     </ol>
+    <p class="note">The plan is tiered. <b>Core:</b> real Para-Lane roads, the raw render vs. released Difix, NVIDIA Fixer and our re-implemented Difix, scored against real adjacent-lane photos. <b>Extensions:</b> the small fixer, road-surface prior, progressive update, more roads and heading. <b>Stretch:</b> camera height, other datasets, FaithFusion and closed-loop driving.</p>
   </section>
 
   <section id="results">
-    <h2>Pilot results (Sep 28, 2026)</h2>
-    <p>These come from a working prototype built before the proposal deadline; the full study follows the timetable in the proposal.</p>
+    <h2>Results so far (updated Sep 29, 2026)</h2>
+    <p>These come from a working prototype built before the proposal deadline, now covering five held-out Para-Lane test roads plus two other datasets; the full study follows the timetable in the proposal.</p>
+    <figure>
+      <img src="assets/figures/lane_f1_per_road.png" alt="Lane agreement one lane over, per test road and method">
+      <figcaption><b>Five held-out test roads, one lane over (~3 m).</b> The ranking of methods is similar on every road, but the level depends strongly on the road: the curve is easiest, the shaded road under a highway is hard for everyone, and the progressive 3D update works very well on one road (scene 16) and only modestly on the others.</figcaption>
+    </figure>
     <figure>
       <img src="assets/figures/trust_vs_offset.png" alt="Trust metrics vs. lateral offset for each fixer">
-      <figcaption><b>Trust vs. sideways offset</b> on two held-out test scenes, against real adjacent-lane photos (95% bootstrap intervals). Lane agreement with the real photo collapses from about 0.98 on the path to under 0.1 at 3 m for the raw render.</figcaption>
+      <figcaption><b>Trust vs. sideways offset</b> on the first two held-out test roads, against real adjacent-lane photos (95% bootstrap intervals). Lane agreement with the real photo collapses from about 0.98 on the path to under 0.1 at 3 m for the raw render.</figcaption>
     </figure>
     <div class="tablewrap">
     <table>
       <thead><tr><th>Finding</th><th>Evidence</th></tr></thead>
       <tbody>
-        <tr><td>Trust collapses quickly off the path</td><td>Lane-detector agreement 0.98 on-path → 0.07 at ~3 m → 0.02 at ~6 m (raw splat)</td></tr>
-        <tr><td>Off-the-shelf fixers look better but aren't more faithful</td><td>Released Difix improves perceptual scores; lane-paint accuracy stays at the raw level</td></tr>
-        <tr><td>Fixers trained on our driving pairs are most faithful, but invent cars</td><td>Our Difix reimplementation: lane agreement 0.59 at ~3 m, but 0.18 fake vehicles per image vs. 0.04 raw</td></tr>
-        <tr><td>Refining the 3D scene itself can work, but depends on the scene</td><td>Progressive update: lane F1 0.18 → 0.91 on one test scene, small gain on the other</td></tr>
-        <tr><td>Geometry helps without hallucinating</td><td>Road-surface prior: lane agreement 0.18 → 0.41 at ~3 m, no generative model involved</td></tr>
-        <tr><td>Trained fixers don't transfer to other cities</td><td>On EUVS (MARS, US), fixers trained on Para-Lane are no better, or worse, than the raw render</td></tr>
+        <tr><td>Trust collapses quickly off the path</td><td>Raw splat, lane agreement with the real photo: 0.16 one lane over (~3 m), 0.02 two lanes over (~6 m), pooled over 5 test roads</td></tr>
+        <tr><td>Off-the-shelf fixers look better, and help only partly</td><td>Released Difix: perceptual error (LPIPS) 0.51 → 0.41, lane agreement 0.16 → 0.42 at ~3 m; NVIDIA Fixer: 0.57</td></tr>
+        <tr><td>Fixers trained on our driving pairs are most faithful, but can invent cars</td><td>Our Difix re-implementation: lane agreement 0.65 at ~3 m, better on all 5 roads, but +0.10 fake vehicles per image vs. raw; Difix fine-tuned from NVIDIA's weights: 0.67 with no added vehicles</td></tr>
+        <tr><td>Refining the 3D scene itself depends strongly on the road</td><td>Progressive update: lane agreement +0.73 on one road, +0.06 to +0.19 on the other four; it never adds vehicles</td></tr>
+        <tr><td>Geometry helps a little, everywhere, without hallucinating</td><td>Road-surface prior: lane agreement +0.08 to +0.35 at ~3 m on all 5 roads, no change in fake vehicles</td></tr>
+        <tr><td>Fixers trained on one city don't transfer</td><td>On EUVS (US) and MV2 (India) the Para-Lane-trained fixers are no better than NVIDIA's generic ones; on MV2 (car → scooter, ~7.6 m apart) no method exceeds 0.09 lane agreement, and NVIDIA Fixer invents 0.26–0.36 vehicles per image</td></tr>
+        <tr><td>Our Difix training code matches the official one</td><td>On DL3DV (the paper's data), at the same training budget, ours beats NVIDIA's training code (LPIPS 0.218 vs. 0.237, FID 26.1 vs. 36.3); with a reference view it ties NVIDIA's released model on LPIPS (0.167 vs. 0.163) with a worse FID (21.2 vs. 18.9)</td></tr>
       </tbody>
     </table>
     </div>
     <h3>Other deviation axes</h3>
     <figure>
       <img src="assets/figures/trust_vs_heading_height.png" alt="Trust vs. lateral offset, heading and camera height">
-      <figcaption>Lateral offset, heading (turning the camera) and camera height side by side. Height changes hurt almost as much as sideways shifts; turning mostly doesn't, except in regions the recording camera never saw.</figcaption>
+      <figcaption>Lateral offset, heading (turning the camera) and camera height side by side. Height changes hurt almost as much as sideways shifts; turning mostly doesn't, except in regions the recording camera never saw. (Height is scored against a road-plane warp of the real photo; MV2's real car/scooter pairs could not isolate height, because the two vehicles are also several metres apart sideways.)</figcaption>
     </figure>
     <div class="grid">
       <figure class="card strip"><img src="assets/figures/panel_6m.jpg" alt="About 6 m off-path comparison"><figcaption>About 6 m off the path: the raw render is heavily smeared.</figcaption></figure>
@@ -161,7 +167,7 @@ footer{padding:24px 0 48px;color:var(--muted);font-size:.85rem}
     </table>
     </div>
     <h3>Limitations so far</h3>
-    <p>The main results come from one city, one camera rig and daytime conditions, with two held-out test scenes; fixers trained there do not transfer to other datasets. Night, rain, dense traffic, side cameras and moving objects seen from new viewpoints are not yet covered. The hallucination metrics are proxies (lane paint and vehicles).</p>
+    <p>The main results come from one city, one camera rig and daytime conditions, with five held-out test roads whose results vary widely; fixers trained there do not transfer to other datasets. MV2's metric scale rests on an assumed camera height. Night, rain, dense traffic, side cameras and moving objects seen from new viewpoints are not yet covered. The hallucination metrics are proxies (lane paint and vehicles).</p>
   </section>
 
   <section id="references">
