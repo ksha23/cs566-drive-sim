@@ -50,16 +50,6 @@
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  },
  {
-  "file": "assets/videos/mv2_car_to_scooter.mp4",
-  "title": "MV2: car view to scooter view (another lane and a lower camera)",
-  "scenario": "lateral offset + camera height, real and simultaneous",
-  "dataset": "MV2",
-  "shown": "real scooter frame | raw splat (car views only) | released Difix | released Difix-ref | NVIDIA Fixer | our Difix (ref)",
-  "caption": "A car and a scooter drove the same street at the same time in different lanes (median 7.6 m apart), the scooter's camera about 0.4 m lower. The splat is built from the car only and compared with what the scooter really saw. No method recovers the lane geometry (lane agreement at most 0.09); NVIDIA Fixer invents the most vehicles (0.26-0.36 per image). Some renders are visibly offset, partly from the 7.6 m gap and possibly from pose or scale errors.",
-  "real_ground_truth": true,
-  "attribution": "Data: MV2 multi-vehicle dataset (arXiv 2608.12442), academic research use only. CS 566, non-commercial."
- },
- {
   "file": "assets/videos/camera_height_sweep_pm1m.mp4",
   "title": "Camera height sweep: -1 m to +1 m",
   "scenario": "camera height",
