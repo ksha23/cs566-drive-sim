@@ -59,6 +59,10 @@ th{color:var(--muted);font-weight:600}
 .refs{font-size:.9rem;color:var(--muted)}
 .refs li{margin:3px 0}
 footer{padding:24px 0 48px;color:var(--muted);font-size:.85rem}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.9rem;margin-top:14px}
+nav.toc a{text-decoration:none}
+code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:20px}
 </style>
 </head>
 <body>
@@ -67,119 +71,195 @@ footer{padding:24px 0 48px;color:var(--muted);font-size:.85rem}
     <h1>How Far Off the Recorded Path Can a Gaussian-Splat Driving Simulator Be Trusted?</h1>
     <p class="sub">Kyle Sha and Allen Xia · CS 566 Computer Vision · University of Wisconsin–Madison · Fall 2026</p>
     <div class="links">
-      <a class="btn primary" href="docs/proposal.pdf">Proposal (PDF)</a>
-      <span class="btn off" title="Due Oct 29">Mid-term report (Oct 29)</span>
-      <span class="btn off" title="Dec 1–10">Presentation (Dec)</span>
-      <span class="btn off" title="Released with the final report">Code (released Dec 10)</span>
+      <a class="btn" href="docs/proposal.pdf">Proposal (PDF)</a>
+      <a class="btn" href="docs/midterm_report.pdf">Mid-term report (PDF)</a>
+      <a class="btn primary" href="docs/cs566_drive_sim_talk.pptx">Presentation (PPTX)</a>
+      <a class="btn" href="docs/cs566_drive_sim_talk.pdf">Presentation (PDF)</a>
+      <a class="btn" href="#code">Source and executable code</a>
     </div>
+    <nav class="toc"><a href="#motivation">Motivation</a><a href="#approach">Approach</a><a href="#implementation">Implementation</a><a href="#results">Results</a><a href="#videos">Videos</a><a href="#problems">Problems encountered</a><a href="#discussion">Discussion</a><a href="#code">Code</a><a href="#references">References</a></nav>
   </div>
 </header>
 
 <main class="wrap">
   <section>
-    <figure class="strip">
-      <img src="assets/figures/panel_3m_s16.jpg" alt="A road rendered about 3 m to the side of the recorded path: real photo, raw splat, several fixers">
-      <figcaption>About 3 m off the recorded path. From left: the <b>real</b> photo from the adjacent lane, the raw splat render, released Difix, Difix fine-tuned on driving data, our small U-Net, and the progressively refined splats. Scroll sideways on small screens.</figcaption>
+    <figure>
+      <img src="assets/figures/qual_3m_typical.jpg" alt="Real image one lane over next to the raw splat render and four repaired versions">
+      <figcaption>A typical frame one lane over (3.0 m). Top left is the real image at this pose; the other panels are the splat built from a neighboring lane, raw and after each repair method, with lane agreement, lane-paint precision/recall, LPIPS and spurious vehicles below each panel. The frame was chosen because its scores are closest to the pooled averages.</figcaption>
     </figure>
     <div class="tldr">
-      <b>In short</b>
+      <b>Summary</b>
       <ul>
-        <li>Driving stacks are tested in simulators rebuilt from real drives. When the simulated car leaves the recorded path, the rendered camera images degrade.</li>
-        <li>Generative "fixers" (e.g., NVIDIA's Difix3D+) make those images look better, but <b>better-looking is not the same as correct</b>: they can invent lane lines and cars.</li>
-        <li>Using real multi-lane recordings, we measure <b>how quickly trust decays</b> as the camera moves sideways or changes height, and which fixers help or hallucinate. We reimplement Difix3D+ ourselves and train a small fixer from scratch.</li>
+        <li>A Gaussian-splat simulator rebuilt from one drive is trustworthy only near the recorded path: agreement between lanes detected on the render and on the real image falls from 0.98 on the path to 0.18 one lane over (3 m) and 0.01 two lanes over (6 m).</li>
+        <li>Diffusion-based fixers recover part of this. Fixers trained on real neighboring-lane pairs reach 0.77–0.79 at 3 m and about 0.5 at 6 m; the released generic ones reach 0.57–0.69 at 3 m.</li>
+        <li>Realism and correctness diverge: fixers invent lane paint and vehicles. Repairing the 3D scene instead of each image invents the least.</li>
+        <li>Gains depend strongly on the road, do not transfer to other cities, and do not raise closed-loop driving scores.</li>
       </ul>
     </div>
   </section>
 
-  <section id="problem">
-    <h2>Problem and motivation</h2>
-    <p>A Gaussian splat reconstructed from one drive is accurate along the path the car recorded, but the recording camera never saw most of the scene from anywhere else. A driving policy tested in the simulator will deviate from the log (a lane change, a swerve), and a different vehicle may carry its camera higher (a truck) or lower. If the rendered images are wrong there, the simulator's verdict on the driving stack is wrong too.</p>
-    <p>Recent work repairs these renders with diffusion-based fixers. Most papers judge them with perceptual image scores, which reward realistic-looking images. We ask whether they make the simulator more <em>trustworthy</em>: do lane detectors and car detectors see the same things they would in reality?</p>
-    <p class="note">What makes this measurable: the <b>Para-Lane</b> dataset scans the same roads in three parallel lanes (about 3.3 m and 6.3 m apart), so we have <b>real photos at off-path viewpoints</b> to compare against.</p>
+  <section id="motivation">
+    <h2>1. Motivation</h2>
+    <p>Driving software is increasingly tested in simulators reconstructed from real driving logs. The recorded video becomes a 3D Gaussian splat, a scene of millions of small, semi-transparent colored ellipsoids that can be rendered from any camera position, so the simulated vehicle can leave the recorded trajectory. The reconstruction is reliable only near that trajectory. After a lane change, or with a camera mounted higher or lower, the rendered images degrade, and a driving system tested on them may behave differently than on the road.</p>
+    <p>Both authors are members of Wisconsin Autonomous, a student autonomous-vehicle team, where we test driving software in conventional simulators (MATLAB/Simulink, RoadRunner, CARLA). Their hand-built assets look visibly different from real camera images. Reconstruction-based simulators could close that gap, but only if renders stay faithful off the recorded path. Recent work repairs off-path renders with diffusion models ("fixers") and evaluates them mostly with realism scores such as FID and LPIPS. We ask how far off the path a splat simulator remains trustworthy, and whether fixers restore trust or only make images look more realistic.</p>
   </section>
 
   <section id="approach">
-    <h2>Approach</h2>
+    <h2>2. Approach</h2>
+    <p class="note">The Para-Lane dataset scans the same roads in three parallel lanes, about 3 m and 6–7.7 m apart. We build a splat from one lane and render it at the recorded poses of the other lanes, where real images exist, so every off-path render has a real image at the same pose to compare against.</p>
     <ol class="steps">
-      <li><b>Rebuild real drives as 3D Gaussian splats</b> (Para-Lane, plus EUVS, MV2 and HUGSIM's nuScenes scenes) and render them from new camera positions: sideways, turned, higher or lower.</li>
-      <li><b>Make training pairs:</b> render one lane's scene from the neighbouring lane's camera positions and pair each render with that lane's real photo.</li>
-      <li><b>Fixers compared:</b> NVIDIA's released Difix and Fixer; <b>our own reimplementation of Difix3D+'s training</b>; a <b>small U-Net trained from scratch</b>; Difix3D+'s progressive update (fixed images fed back into the 3D scene); FaithFusion's confidence weighting; and a purely geometric road-surface prior.</li>
-      <li><b>Measure trust vs. deviation:</b> image quality against the real photos, hallucination (invented or erased lane paint, fake cars), agreement of a lane detector (CLRNet) and a car detector (YOLO), and a closed-loop driving policy in the HUGSIM simulator.</li>
+      <li>Reconstruct a Gaussian splat of each road from one lane (LiDAR initialization and depth supervision, a learned sky model, moving objects masked).</li>
+      <li>Render it at the neighboring lanes' real poses, and additionally with the camera turned (heading) or raised and lowered (camera height).</li>
+      <li>Repair the renders with each method: the released Difix and NVIDIA Fixer; our re-implementation of the Difix training procedure, trained on neighboring-lane pairs; the released Difix fine-tuned on the same pairs (Difix-FT); a small U-Net trained from scratch; the progressive 3D update of Difix3D+, which adds repaired views back into the splat; and a road-surface prior fitted to LiDAR, which involves no image generation.</li>
+      <li>Measure trust against the real image: lane agreement (F1 between CLRNet lanes on the render and on the real image), perceptual distance (LPIPS), invented and erased lane paint, and spurious vehicles (YOLO11 detections with no counterpart in the real image). Intervals are 95% bootstrap intervals over lane-pair sequences.</li>
+      <li>Test transfer to other cities (EUVS/MARS in the US, MV2 in India) and closed-loop driving in the HUGSIM simulator with a released policy.</li>
     </ol>
-    <p class="note">The plan is tiered. <b>Core:</b> real Para-Lane roads, the raw render vs. released Difix, NVIDIA Fixer and our re-implemented Difix, scored against real adjacent-lane photos. <b>Extensions:</b> the small fixer, road-surface prior, progressive update, more roads and heading. <b>Stretch:</b> camera height, other datasets, FaithFusion and closed-loop driving.</p>
+    <p>The plan was organized in tiers: a core study (Para-Lane, the released fixers and our Difix re-implementation), extensions (small fixer, road prior, progressive update, more roads, heading) and stretch goals (camera height, other datasets, FaithFusion, closed loop). All tiers were completed.</p>
+  </section>
+
+  <section id="implementation">
+    <h2>3. Implementation</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Component</th><th>What we implemented</th><th>Used as released</th></tr></thead>
+      <tbody>
+        <tr><td>Difix fixer [1]</td><td>Training procedure written from the paper: single-step denoising from SD-Turbo at τ = 200, reference-view attention across views, LoRA-tuned decoder with skip connections, L2 + LPIPS + Gram losses. Validated against NVIDIA's official trainer and released weights.</td><td>SD-Turbo pretrained weights</td></tr>
+        <tr><td>Splat renderer</td><td>Our own projection: world-to-camera transform, 3D covariance, EWA projection, culling, spherical-harmonic color, depth, sky compositing, and the statistics densification needs.</td><td>gsplat's tile-sorting and blending CUDA kernels</td></tr>
+        <tr><td>Scene reconstruction</td><td>Fitting pipeline for driving logs: LiDAR initialization and depth loss, sky model, moving-object masks, held-out on-path frames.</td><td>gsplat densification strategy</td></tr>
+        <tr><td>Progressive 3D update [1]</td><td>Repaired pseudo-views at shifted poses added back as training views, with masks for sky and far regions.</td><td>–</td></tr>
+        <tr><td>Road-surface prior [15]</td><td>Height and slope field fitted to LiDAR; road Gaussians pulled onto it and flattened (ViSE released no code).</td><td>–</td></tr>
+        <tr><td>Small fixer</td><td>Residual U-Net trained from scratch on the same pairs.</td><td>–</td></tr>
+        <tr><td>Evaluation</td><td>Neighboring-lane pairing, lane agreement against the real image, lane-paint masks, spurious-vehicle counting, bootstrap statistics, heading (exact rotation warp) and camera-height (road-plane warp) ground truth.</td><td>CLRNet and YOLO11 detectors</td></tr>
+        <tr><td>Comparison methods</td><td>Integration and batch inference; a small compatibility layer so NVIDIA Fixer runs without NVIDIA Transformer Engine; FaithFusion's information-gain map computed on our splats.</td><td>Released Difix, NVIDIA Fixer, FaithFusion, HUGSIM with the LTF policy</td></tr>
+      </tbody>
+    </table></div>
+    <p>Everything ran on one RTX 3090 (24 GB). Fitting a road takes about 5 minutes, fine-tuning a fixer about an hour, and reconstructing, repairing and scoring one additional road with every method about 1.5–2 GPU-hours.</p>
   </section>
 
   <section id="results">
-    <h2>Results so far (updated Sep 29, 2026)</h2>
-    <p>These come from a working prototype built before the proposal deadline, now covering five held-out Para-Lane test roads plus two other datasets; the full study follows the timetable in the proposal.</p>
+    <h2>4. Results</h2>
+    <h3>Trust versus lateral offset</h3>
     <figure>
-      <img src="assets/figures/lane_f1_per_road.png" alt="Lane agreement one lane over, per test road and method">
-      <figcaption><b>Five held-out test roads, one lane over (~3 m).</b> The ranking of methods is similar on every road, but the level depends strongly on the road: the curve is easiest, the shaded road under a highway is hard for everyone, and the progressive 3D update works very well on one road (scene 16) and only modestly on the others.</figcaption>
+      <img src="assets/figures/fig1_trust_vs_offset.png" alt="Lane agreement, LPIPS and spurious vehicles against lateral offset for every method">
+      <figcaption>Figure 1. Pooled over eight held-out Para-Lane roads (555 images on the path, 2,825 at about 3 m, 1,386 at about 6 m).</figcaption>
     </figure>
-    <figure>
-      <img src="assets/figures/trust_vs_offset.png" alt="Trust metrics vs. lateral offset for each fixer">
-      <figcaption><b>Trust vs. sideways offset</b> on the first two held-out test roads, against real adjacent-lane photos (95% bootstrap intervals). Lane agreement with the real photo collapses from about 0.98 on the path to under 0.1 at 3 m for the raw render.</figcaption>
-    </figure>
-    <div class="tablewrap">
-    <table>
-      <thead><tr><th>Finding</th><th>Evidence</th></tr></thead>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Method</th><th>Lane F1, ~3 m</th><th>Lane F1, ~6 m</th><th>LPIPS, ~3 m</th><th>Spurious vehicles / image, ~3 m</th></tr></thead>
       <tbody>
-        <tr><td>Trust collapses quickly off the path</td><td>Raw splat, lane agreement with the real photo: 0.16 one lane over (~3 m), 0.02 two lanes over (~6 m), pooled over 5 test roads</td></tr>
-        <tr><td>Off-the-shelf fixers look better, and help only partly</td><td>Released Difix: perceptual error (LPIPS) 0.51 → 0.41, lane agreement 0.16 → 0.42 at ~3 m; NVIDIA Fixer: 0.57</td></tr>
-        <tr><td>Fixers trained on our driving pairs are most faithful, but can invent cars</td><td>Our Difix re-implementation: lane agreement 0.65 at ~3 m, better on all 5 roads, but +0.10 fake vehicles per image vs. raw; Difix fine-tuned from NVIDIA's weights: 0.67 with no added vehicles</td></tr>
-        <tr><td>Refining the 3D scene itself depends strongly on the road</td><td>Progressive update: lane agreement +0.73 on one road, +0.06 to +0.19 on the other four; it never adds vehicles</td></tr>
-        <tr><td>Geometry helps a little, everywhere, without hallucinating</td><td>Road-surface prior: lane agreement +0.08 to +0.35 at ~3 m on all 5 roads, no change in fake vehicles</td></tr>
-        <tr><td>Fixers trained on one city don't transfer</td><td>On EUVS (US) and MV2 (India) the Para-Lane-trained fixers are no better than NVIDIA's generic ones; on MV2 (car → scooter, ~7.6 m apart) no method exceeds 0.09 lane agreement, and NVIDIA Fixer invents 0.26–0.36 vehicles per image</td></tr>
-        <tr><td>Our Difix training code matches the official one</td><td>On DL3DV (the paper's data), at the same training budget, ours beats NVIDIA's training code (LPIPS 0.218 vs. 0.237, FID 26.1 vs. 36.3); with a reference view it ties NVIDIA's released model on LPIPS (0.167 vs. 0.163) with a worse FID (21.2 vs. 18.9)</td></tr>
+        <tr><td>Raw render</td><td>0.18 [0.13, 0.24]</td><td>0.01</td><td>0.49</td><td>0.064</td></tr>
+        <tr><td>Released Difix</td><td>0.57 [0.47, 0.67]</td><td>0.21</td><td>0.39</td><td>0.093</td></tr>
+        <tr><td>NVIDIA Fixer</td><td>0.69 [0.59, 0.78]</td><td>0.41</td><td>0.45</td><td>0.099</td></tr>
+        <tr><td>Difix-FT (released weights fine-tuned on our pairs)</td><td>0.79 [0.70, 0.87]</td><td>0.52</td><td>0.29</td><td>0.030</td></tr>
+        <tr><td>Our Difix re-implementation</td><td>0.77 [0.68, 0.85]</td><td>0.53</td><td>0.28</td><td>0.148</td></tr>
+        <tr><td>Small U-Net (from scratch)</td><td>0.25 [0.18, 0.32]</td><td>0.01</td><td>0.42</td><td>0.042</td></tr>
+        <tr><td>Progressive 3D update</td><td>0.46 [0.36, 0.56]</td><td>0.09</td><td>0.49</td><td>0.011</td></tr>
+        <tr><td>Road-surface prior</td><td>0.34 [0.27, 0.41]</td><td>0.05</td><td>0.47</td><td>0.061</td></tr>
       </tbody>
-    </table>
-    </div>
-    <h3>Other deviation axes</h3>
+    </table></div>
+    <p>On the path every method agrees with the real image (lane F1 0.96–0.98). Our re-implementation adds spurious vehicles on all eight roads (+0.089 per image [+0.062, +0.117] relative to the raw render); Difix-FT does not. The progressive update raises lane F1 by +0.33 [+0.19, +0.49] at about 3 m and produces the fewest spurious vehicles, but helps little at 6 m.</p>
+
+    <h3>Invented and erased content</h3>
     <figure>
-      <img src="assets/figures/trust_vs_heading_height.png" alt="Trust vs. lateral offset, heading and camera height">
-      <figcaption>Lateral offset, heading (turning the camera) and camera height side by side. Height changes hurt almost as much as sideways shifts; turning mostly doesn't, except in regions the recording camera never saw. (Height is scored against a road-plane warp of the real photo; MV2's real car/scooter pairs could not isolate height, because the two vehicles are also several metres apart sideways.)</figcaption>
+      <img src="assets/figures/qual_hallucination.jpg" alt="Hallucination example with invented paint circled">
+      <figcaption>Figure 2. Orange: lane paint present in the output but not in the real image. Blue: real markings missing from the output. Our re-implementation paints a wide stripe that is not on the road (paint precision 0.13, raw render 0.95) while its lane F1 stays high.</figcaption>
     </figure>
-    <div class="grid">
-      <figure class="card strip"><img src="assets/figures/panel_6m.jpg" alt="About 6 m off-path comparison"><figcaption>About 6 m off the path: the raw render is heavily smeared.</figcaption></figure>
-      <figure class="card strip"><img src="assets/figures/panel_height1m.jpg" alt="Camera raised by 1 m"><figcaption>Camera raised 1 m (a truck-mounted camera).</figcaption></figure>
-      <figure class="card strip"><img src="assets/figures/panel_yaw10.jpg" alt="Camera turned 10 degrees"><figcaption>Camera turned 10°: note the artifacts at the edge the recording never saw.</figcaption></figure>
-      <figure class="card strip"><img src="assets/figures/panel_0m.jpg" alt="On the recorded path"><figcaption>On the recorded path, for reference: every method looks close to the real photo.</figcaption></figure>
-    </div>
+
+    <h3>Variation across roads</h3>
+    <figure>
+      <img src="assets/figures/fig2_lane_f1_per_road_3m.png" alt="Lane agreement one lane over for each road and method">
+      <figcaption>Figure 3. The ranking of methods is stable across roads, but the level is not: the best fixer reaches 0.95 on a curved road and at most 0.39 under an elevated highway with hard shadows.</figcaption>
+    </figure>
+    <figure>
+      <img src="assets/figures/qual_failure.jpg" alt="Failure case under an elevated highway, two lanes over">
+      <figcaption>Figure 4. Failure case, two lanes over (7.5 m) under the highway: every fixer produces a plausible road, and none reproduces the real yellow center line (lane F1 0 for all).</figcaption>
+    </figure>
+
+    <h3>Our Difix training re-implementation</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Model (DL3DV, 3 held-out scenes, sparse views every 30th frame)</th><th>PSNR</th><th>LPIPS</th><th>FID</th></tr></thead>
+      <tbody>
+        <tr><td>Raw render</td><td>21.87</td><td>0.195</td><td>37.7</td></tr>
+        <tr><td>Official trainer, matched budget (no reference view)</td><td>19.91</td><td>0.237</td><td>36.3</td></tr>
+        <tr><td>Our trainer, matched budget (no reference view)</td><td>21.20</td><td>0.218</td><td>26.1</td></tr>
+        <tr><td>Released Difix-ref (NVIDIA weights)</td><td>21.77</td><td>0.163</td><td>18.9</td></tr>
+        <tr><td>Our trainer with reference view</td><td>22.08</td><td>0.167</td><td>21.2</td></tr>
+      </tbody>
+    </table></div>
+    <p>At the same budget and training pairs our trainer outperforms the official trainer (paired ΔLPIPS −0.019 [−0.020, −0.017]). With a reference view it matches NVIDIA's released Difix-ref on LPIPS and has a higher FID. Only the DL3DV sample release was accessible, so this uses three held-out scenes rather than the paper's benchmark.</p>
+
+    <h3>Heading and camera height</h3>
+    <figure>
+      <img src="assets/figures/fig3_heading_height.png" alt="Effect of turning and of raising or lowering the camera">
+      <figcaption>Figure 5. Turning the camera by up to ±15° barely changes lane agreement (heading has an exact ground truth from a rotation warp). Raising or lowering the camera by 1 m costs the raw render 5–7 dB on the road region, scored against a road-plane warp of the real image.</figcaption>
+    </figure>
+
+    <h3>Other cities and closed-loop driving</h3>
+    <p>On EUVS/MARS routes (US) and MV2 car/scooter pairs (India), the fixers trained on Para-Lane do not transfer: the generic released Difix-ref gives the largest LPIPS improvement (EUVS: 0.522 raw, 0.421 Difix-ref), Difix-FT becomes worse than the raw render (0.589), and on MV2 no method exceeds lane F1 0.09.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>HUGSIM closed loop (released LTF policy, 25 scenarios × 3 seeds)</th><th>HD-Score</th><th>Change vs. no fixer (paired)</th></tr></thead>
+      <tbody>
+        <tr><td>No fixer</td><td>0.408 [0.326, 0.486]</td><td>–</td></tr>
+        <tr><td>Released Difix</td><td>0.392</td><td>−0.015 [−0.064, +0.034]</td></tr>
+        <tr><td>Difix-FT</td><td>0.403</td><td>−0.005 [−0.054, +0.048]</td></tr>
+        <tr><td>NVIDIA Fixer</td><td>0.356</td><td>−0.051 [−0.101, −0.004]</td></tr>
+      </tbody>
+    </table></div>
+    <p>No fixer improves the driving score, and the variation between policy seeds (0.31–0.46) exceeds every fixer effect. FaithFusion's per-pixel information-gain map partly predicts invented lane paint one lane over (AUROC 0.67–0.76), but weighting the progressive update with it made no measurable difference.</p>
+
+    <h3>Our renderer against gsplat</h3>
+    <figure>
+      <img src="assets/figures/fig_own_vs_gsplat.jpg" alt="Renders from gsplat and from our renderer, with a magnified difference image">
+      <figcaption>Figure 6. Renders from our projection code agree with gsplat to 90.8 dB PSNR on average (difference magnified 1000×, bottom left); gradients agree with cosine similarity of at least 0.99996; a full refit with our renderer scores within the variation between gsplat runs. Training is 1.44 times slower.</figcaption>
+    </figure>
   </section>
 
   <section id="videos">
-    <h2>Videos</h2>
-    <p>Side-by-side clips across datasets and deviation types: lane changes, camera height, heading, a different city (EUVS / MARS), nuScenes in the HUGSIM simulator, and a closed-loop driving run. Each clip says whether a real camera frame exists at that viewpoint. More are being added.</p>
+    <h2>5. Videos</h2>
+    <p>Side-by-side clips across roads, deviation types and datasets. Each clip states whether a real camera frame exists at that viewpoint.</p>
     <div id="video-grid" class="grid"><p class="meta">Loading videos…</p></div>
   </section>
 
-  <section id="status">
-    <h2>Status and deliverables</h2>
-    <div class="tablewrap">
-    <table>
-      <thead><tr><th>Milestone</th><th>Date</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td>Proposal</td><td>Sep 29</td><td><a href="docs/proposal.pdf">Final (PDF)</a></td></tr>
-        <tr><td>Mid-term report</td><td>Oct 29</td><td>Planned</td></tr>
-        <tr><td>Presentation</td><td>Dec 1–10</td><td>Planned</td></tr>
-        <tr><td>Final webpage and code</td><td>Dec 10</td><td>This page; code released at the end</td></tr>
-      </tbody>
-    </table>
-    </div>
-    <h3>Limitations so far</h3>
-    <p>The main results come from one city, one camera rig and daytime conditions, with five held-out test roads whose results vary widely; fixers trained there do not transfer to other datasets. MV2's metric scale rests on an assumed camera height. Night, rain, dense traffic, side cameras and moving objects seen from new viewpoints are not yet covered. The hallucination metrics are proxies (lane paint and vehicles).</p>
+  <section id="problems">
+    <h2>6. Problems Encountered</h2>
+    <ul>
+      <li>NVIDIA's released Difix trainer needed six fixes to run (undefined names, a missing attribute, an ignored step limit) and exceeded 24 GB with the reference view, so the matched comparison uses the single-view setting.</li>
+      <li>DL3DV granted only its sample release, so the re-implementation check uses three held-out scenes. EUVS's rotation-only setting requires nuPlan data under a separate license and was not run.</li>
+      <li>The Para-Lane lanes were driven at different times, so traffic differs between render and real image; moving objects are masked in all metrics.</li>
+      <li>MV2's poses are normalized (metric scale assumes a 1.40 m car camera), and its two vehicles are about 7.6 m apart laterally, so camera height could not be isolated there; we rely on a road-plane warp of the real image instead.</li>
+      <li>The color-and-contrast lane-paint detector also responds to hard shadows and bright curbs on three roads, which makes paint precision and recall noisy there; lane F1 is unaffected.</li>
+      <li>FaithFusion's full pipeline depends on an unreleased restorer; NVIDIA Fixer needs NVIDIA Transformer Engine, which we could not build; the other HUGSIM driving policies depend on outdated software.</li>
+      <li>The small U-Net trained from scratch mostly blurs and does not transfer. Our first renderer was 12 times slower than gsplat until we restructured its small matrix products.</li>
+    </ul>
+  </section>
+
+  <section id="discussion">
+    <h2>7. Discussion and Limitations</h2>
+    <p>Off-path trust in a splat simulator is limited to roughly the width of one lane even with the best repair methods, and realism metrics alone overstate it: the method with the best LPIPS invents the most vehicles. Repairing the 3D scene instead of each image is the most conservative option, but its benefit varies widely between roads. Fixers trained on one city do not carry over to others, and none changes closed-loop driving scores in HUGSIM.</p>
+    <p>The main results come from one city, one camera rig and daytime conditions, with eight test roads. Lane and vehicle detectors are proxies for what a driving system perceives, and the closed-loop results rest on a single released policy.</p>
+  </section>
+
+  <section id="code">
+    <h2>8. Source and Executable Code</h2>
+    <p>The code is at <a href="https://github.com/ksha23/cs566-D-drive-sim-trust">github.com/ksha23/cs566-D-drive-sim-trust</a> (<a href="https://github.com/ksha23/cs566-D-drive-sim-trust/archive/refs/heads/main.zip">download as ZIP</a>). The repository contains the full pipeline, a stage-by-stage reproduction guide with runtimes, and three command-line tools:</p>
+    <ul>
+      <li><code>src/tools/render_offpath.py</code>: render a fitted splat at shifted, turned or raised camera poses.</li>
+      <li><code>src/tools/fix_folder.py</code>: apply any of the fixers to a folder of rendered images.</li>
+      <li><code>src/tools/pair_metrics.py</code>: compute the trust metrics for render and real image pairs.</li>
+    </ul>
+    <p class="meta">Datasets and model weights are not redistributed; the README links to each source and its license. Our code is MIT-licensed; third-party components keep their own licenses.</p>
   </section>
 
   <section id="references">
-    <h2>Main papers and data</h2>
+    <h2>References and Data</h2>
     <ol class="refs">
       <li>Difix3D+: Improving 3D reconstructions with single-step diffusion models, CVPR 2025 — <a href="https://arxiv.org/abs/2503.01774">arXiv</a></li>
       <li>FaithFusion: harmonizing reconstruction and generation via pixel-wise information gain, CVPR 2026 — <a href="https://arxiv.org/abs/2511.21113">arXiv</a></li>
       <li>HUGSIM: a real-time, photo-realistic and closed-loop simulator for autonomous driving, TPAMI 2026 — <a href="https://arxiv.org/abs/2412.01718">arXiv</a></li>
-      <li>NVIDIA Fixer — <a href="https://github.com/nv-tlabs/Fixer">GitHub</a>; ReconDreamer (NTA/NTL-IoU metrics) — <a href="https://arxiv.org/abs/2411.19548">arXiv</a>; PRG-Fusion — <a href="https://arxiv.org/abs/2609.06948">arXiv</a></li>
-      <li>Para-Lane — <a href="https://arxiv.org/abs/2502.15635">arXiv</a>; EUVS — <a href="https://arxiv.org/abs/2412.05256">arXiv</a>; MV2 — <a href="https://arxiv.org/abs/2608.12442">arXiv</a></li>
+      <li>NVIDIA Fixer — <a href="https://github.com/nv-tlabs/Fixer">GitHub</a></li>
+      <li>ReconDreamer, CVPR 2025 — <a href="https://arxiv.org/abs/2411.19548">arXiv</a>; PRG-Fusion, 2026 — <a href="https://arxiv.org/abs/2609.06948">arXiv</a></li>
+      <li>EUVS benchmark, ICCV 2025 — <a href="https://arxiv.org/abs/2412.05256">arXiv</a>; Para-Lane, 3DV 2025 — <a href="https://arxiv.org/abs/2502.15635">arXiv</a>; MV2, ECCV 2026 — <a href="https://arxiv.org/abs/2608.12442">arXiv</a></li>
+      <li>3D Gaussian Splatting, SIGGRAPH 2023 — <a href="https://arxiv.org/abs/2308.04079">arXiv</a>; CLRNet, CVPR 2022 — <a href="https://arxiv.org/abs/2203.10350">arXiv</a>; ViSE, ICCV 2025 — <a href="https://arxiv.org/abs/2510.18341">arXiv</a></li>
     </ol>
-    <p class="refs">Images and videos on this page are derived from Para-Lane (CC BY-NC 4.0), nuScenes via HUGSIM and EUVS/MARS, shown for non-commercial academic purposes. No datasets or model weights are distributed here.</p>
+    <p class="refs">Images and videos on this page are derived from Para-Lane (CC BY-NC 4.0), nuScenes via HUGSIM (CC BY-NC-SA 4.0) and EUVS/MARS (CC BY-NC-SA 4.0) for non-commercial academic purposes. No datasets or model weights are distributed here.</p>
   </section>
 </main>
 
@@ -195,7 +275,7 @@ footer{padding:24px 0 48px;color:var(--muted);font-size:.85rem}
       var d=document.createElement('div'); d.className='card';
       d.innerHTML='<video controls muted playsinline preload="metadata" src="'+esc(v.file)+'"></video>'+
         '<h3>'+esc(v.title)+'</h3><p class="meta">'+esc(v.scenario)+' · '+esc(v.dataset)+
-        (v.real_ground_truth===true?' · <b>real ground truth</b>':(v.real_ground_truth===false?' · no real frame (visual check)':''))+'</p>'+
+        (v.real_ground_truth===true?' · real ground truth':(v.real_ground_truth===false?' · no real frame (visual check)':(v.real_ground_truth?' · ground truth: '+esc(v.real_ground_truth):'')))+'</p>'+
         (v.shown?'<p class="meta">Panels: '+esc(v.shown)+'</p>':'')+
         '<p>'+esc(v.caption)+'</p><p class="meta">'+esc(v.attribution)+'</p>';
       grid.appendChild(d);
@@ -203,5 +283,6 @@ footer{padding:24px 0 48px;color:var(--muted);font-size:.85rem}
   }).catch(function(){ grid.innerHTML='<p class="meta">Videos could not be loaded.</p>'; });
 })();
 </script>
+
 </body>
 </html>
