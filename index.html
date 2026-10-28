@@ -101,7 +101,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
   <section id="motivation">
     <h2>1. Motivation</h2>
     <p>Driving software is increasingly tested in simulators reconstructed from real driving logs. The recorded video becomes a 3D Gaussian splat, a scene of millions of small, semi-transparent colored ellipsoids that can be rendered from any camera position, so the simulated vehicle can leave the recorded trajectory. The reconstruction is reliable only near that trajectory. After a lane change, or with a camera mounted higher or lower, the rendered images degrade, and a driving system tested on them may behave differently than on the road.</p>
-    <p>Both authors are members of Wisconsin Autonomous, a student autonomous-vehicle team, where we test driving software in conventional simulators (MATLAB/Simulink, RoadRunner, CARLA). Their hand-built assets look visibly different from real camera images. Reconstruction-based simulators could close that gap, but only if renders stay faithful off the recorded path. Recent work repairs off-path renders with diffusion models ("fixers") and evaluates them mostly with realism scores such as FID and LPIPS. We ask how far off the path a splat simulator remains trustworthy, and whether fixers restore trust or only make images look more realistic.</p>
+    <p>Both authors are members of Wisconsin Autonomous, a student autonomous-vehicle team, where we test driving software in conventional simulators (MATLAB/Simulink, RoadRunner, CARLA). Their hand-built assets look visibly different from real camera images. Reconstruction-based simulators could close that gap, but only if renders stay faithful off the recorded path. Recent work repairs off-path renders with diffusion models ("fixers") and evaluates them mostly with realism scores such as FID and LPIPS. RGE-GS [8] compares reconstruction methods, including ones guided by diffusion priors, with the real images one and two lanes over on Para-Lane using image-similarity metrics, and KITScenes [9] reports that traffic-sign recall in a feed-forward reconstruction falls by about 80% at ±3 m. We ask how far off the path a splat simulator remains trustworthy, and whether fixers restore trust or only make images look more realistic.</p>
   </section>
 
   <section id="approach">
@@ -126,7 +126,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
         <tr><td>Splat renderer</td><td>Our own projection: world-to-camera transform, 3D covariance, EWA projection, culling, spherical-harmonic color, depth, sky compositing, and the statistics densification needs.</td><td>gsplat's tile-sorting and blending CUDA kernels</td></tr>
         <tr><td>Scene reconstruction</td><td>Fitting pipeline for driving logs: LiDAR initialization and depth loss, sky model, moving-object masks, held-out on-path frames.</td><td>gsplat densification strategy</td></tr>
         <tr><td>Progressive 3D update [1]</td><td>Repaired pseudo-views at shifted poses added back as training views, with masks for sky and far regions.</td><td>–</td></tr>
-        <tr><td>Road-surface prior [15]</td><td>Height and slope field fitted to LiDAR; road Gaussians pulled onto it and flattened (ViSE released no code).</td><td>–</td></tr>
+        <tr><td>Road-surface prior [7]</td><td>Height and slope field fitted to LiDAR; road Gaussians pulled onto it and flattened (ViSE released no code).</td><td>–</td></tr>
         <tr><td>Small fixer</td><td>Residual U-Net trained from scratch on the same pairs.</td><td>–</td></tr>
         <tr><td>Evaluation</td><td>Neighboring-lane pairing, lane agreement against the real image, lane-paint masks, spurious-vehicle counting, bootstrap statistics, heading (exact rotation warp) and camera-height (road-plane warp) ground truth.</td><td>CLRNet and YOLO11 detectors</td></tr>
         <tr><td>Comparison methods</td><td>Integration and batch inference; a small compatibility layer so NVIDIA Fixer runs without NVIDIA Transformer Engine; FaithFusion's information-gain map computed on our splats.</td><td>Released Difix, NVIDIA Fixer, FaithFusion, HUGSIM with the LTF policy</td></tr>
@@ -203,7 +203,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
         <tr><td>NVIDIA Fixer</td><td>0.356</td><td>−0.051 [−0.101, −0.004]</td></tr>
       </tbody>
     </table></div>
-    <p>No fixer improves the driving score, and the variation between policy seeds (0.31–0.46) exceeds every fixer effect. FaithFusion's per-pixel information-gain map partly predicts invented lane paint one lane over (AUROC 0.67–0.76), but weighting the progressive update with it made no measurable difference.</p>
+    <p>No fixer improves the driving score, and the variation between policy seeds (0.31–0.46) exceeds every fixer effect. Without a fixer, the policy spends 44% of its steps 1–4.5 m from the recorded trajectory and 29% more than 4.5 m from it, so the fixers are exercised at the offsets of the Para-Lane study. FaithFusion's per-pixel information-gain map partly predicts invented lane paint one lane over (AUROC 0.67–0.76), but weighting the progressive update with it made no measurable difference.</p>
 
     <h3>Our renderer against gsplat</h3>
     <figure>
@@ -258,6 +258,8 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
       <li>ReconDreamer, CVPR 2025 — <a href="https://arxiv.org/abs/2411.19548">arXiv</a>; PRG-Fusion, 2026 — <a href="https://arxiv.org/abs/2609.06948">arXiv</a></li>
       <li>EUVS benchmark, ICCV 2025 — <a href="https://arxiv.org/abs/2412.05256">arXiv</a>; Para-Lane, 3DV 2025 — <a href="https://arxiv.org/abs/2502.15635">arXiv</a>; MV2, ECCV 2026 — <a href="https://arxiv.org/abs/2608.12442">arXiv</a></li>
       <li>3D Gaussian Splatting, SIGGRAPH 2023 — <a href="https://arxiv.org/abs/2308.04079">arXiv</a>; CLRNet, CVPR 2022 — <a href="https://arxiv.org/abs/2203.10350">arXiv</a>; ViSE, ICCV 2025 — <a href="https://arxiv.org/abs/2510.18341">arXiv</a></li>
+      <li>RGE-GS: reward-guided expansive driving scene reconstruction via diffusion priors, 2025 — <a href="https://arxiv.org/abs/2506.22800">arXiv</a></li>
+      <li>The road ahead in autonomous driving: the KITScenes multimodal dataset, 2026 — <a href="https://arxiv.org/abs/2606.02956">arXiv</a></li>
     </ol>
     <p class="refs">Images and videos on this page are derived from Para-Lane (CC BY-NC 4.0), nuScenes via HUGSIM (CC BY-NC-SA 4.0) and EUVS/MARS (CC BY-NC-SA 4.0) for non-commercial academic purposes. No datasets or model weights are distributed here.</p>
   </section>
