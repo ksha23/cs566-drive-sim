@@ -93,7 +93,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
         <li>A Gaussian-splat simulator rebuilt from one drive is trustworthy only near the recorded path: agreement between lanes detected on the render and on the real image falls from 0.98 on the path to 0.18 one lane over (3 m) and 0.01 two lanes over (6 m).</li>
         <li>Diffusion-based fixers recover part of this. Fixers trained on real neighboring-lane pairs reach 0.77–0.79 at 3 m and about 0.5 at 6 m; the released generic ones reach 0.57–0.69 at 3 m.</li>
         <li>Realism and correctness diverge: fixers invent lane paint and vehicles. Repairing the 3D scene instead of each image invents the least.</li>
-        <li>Gains depend strongly on the road, do not transfer to other cities, and do not raise closed-loop driving scores.</li>
+        <li>Gains depend strongly on the road, transfer only partially to other cities, and do not raise closed-loop driving scores.</li>
       </ul>
     </div>
   </section>
@@ -114,7 +114,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
       <li>Measure trust against the real image: lane agreement (F1 between CLRNet lanes on the render and on the real image), perceptual distance (LPIPS), invented and erased lane paint, and spurious vehicles (YOLO11 detections with no counterpart in the real image). Intervals are 95% bootstrap intervals over lane-pair sequences.</li>
       <li>Test transfer to other cities (EUVS/MARS in the US, MV2 in India) and closed-loop driving in the HUGSIM simulator with a released policy.</li>
     </ol>
-    <p>The plan was organized in tiers: a core study (Para-Lane, the released fixers and our Difix re-implementation), extensions (small fixer, road prior, progressive update, more roads, heading) and stretch goals (camera height, other datasets, FaithFusion, closed loop). All tiers were completed.</p>
+    <p>The plan was organized in tiers: a core study (Para-Lane, the released fixers and our Difix re-implementation), extensions (small fixer, road prior, progressive update, more roads, heading) and stretch goals (camera height, other datasets, FaithFusion, closed loop). Every tier has results; heading, camera height, the other datasets, FaithFusion and closed loop cover part of what was planned (see the mid-term report).</p>
   </section>
 
   <section id="implementation">
@@ -155,7 +155,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
         <tr><td>Road-surface prior</td><td>0.34 [0.27, 0.41]</td><td>0.05</td><td>0.47</td><td>0.061</td></tr>
       </tbody>
     </table></div>
-    <p>On the path every method agrees with the real image (lane F1 0.96–0.98). Our re-implementation adds spurious vehicles on all eight roads (+0.089 per image [+0.062, +0.117] relative to the raw render); Difix-FT does not. The progressive update raises lane F1 by +0.33 [+0.19, +0.49] at about 3 m and produces the fewest spurious vehicles, but helps little at 6 m.</p>
+    <p>On the path every method agrees with the real image (lane F1 0.96–0.98). Our re-implementation adds spurious vehicles on all eight roads (+0.089 per image [+0.062, +0.117] relative to the raw render); Difix-FT does not on average. The progressive update raises lane F1 by +0.33 [+0.19, +0.49] at about 3 m and produces the fewest spurious vehicles, but helps little at 6 m.</p>
 
     <h3>Invented and erased content</h3>
     <figure>
@@ -166,7 +166,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
     <h3>Variation across roads</h3>
     <figure>
       <img src="assets/figures/fig2_lane_f1_per_road_3m.png" alt="Lane agreement one lane over for each road and method">
-      <figcaption>Figure 3. The ranking of methods is stable across roads, but the level is not: the best fixer reaches 0.95 on a curved road and at most 0.39 under an elevated highway with hard shadows.</figcaption>
+      <figcaption>Figure 3. Difix-FT and our re-implementation rank among the top three on every road, while the order of the other methods varies; the level varies even more: the best fixer reaches 0.95 on a curved road and at most 0.39 under an elevated highway with hard shadows.</figcaption>
     </figure>
     <figure>
       <img src="assets/figures/qual_failure.jpg" alt="Failure case under an elevated highway, two lanes over">
@@ -184,7 +184,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
         <tr><td>Our trainer with reference view</td><td>22.08</td><td>0.167</td><td>21.2</td></tr>
       </tbody>
     </table></div>
-    <p>At the same budget and training pairs our trainer outperforms the official trainer (paired ΔLPIPS −0.019 [−0.020, −0.017]). With a reference view it matches NVIDIA's released Difix-ref on LPIPS and has a higher FID. Only the DL3DV sample release was accessible, so this uses three held-out scenes rather than the paper's benchmark.</p>
+    <p>At the same budget and training pairs our trainer outperforms the official trainer (paired ΔLPIPS −0.019 [−0.020, −0.017]). With a reference view it is within 0.005 LPIPS of NVIDIA's released Difix-ref and has a higher FID. Only the DL3DV sample release was accessible, so this uses three held-out scenes rather than the paper's benchmark.</p>
 
     <h3>Heading and camera height</h3>
     <figure>
@@ -193,7 +193,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
     </figure>
 
     <h3>Other cities and closed-loop driving</h3>
-    <p>On EUVS/MARS routes (US) and MV2 car/scooter pairs (India), the fixers trained on Para-Lane do not transfer: the generic released Difix-ref gives the largest LPIPS improvement (EUVS: 0.522 raw, 0.421 Difix-ref), Difix-FT becomes worse than the raw render (0.589), and on MV2 no method exceeds lane F1 0.09.</p>
+    <p>On EUVS/MARS routes (US) and MV2 car/scooter pairs (India), the fixers trained on Para-Lane transfer only partially: the generic released Difix-ref gives the largest LPIPS improvement (EUVS: 0.522 raw, 0.421 Difix-ref), Difix-FT becomes worse than the raw render on EUVS (0.589), and on MV2 no method reaches lane F1 0.1.</p>
     <div class="tablewrap"><table>
       <thead><tr><th>HUGSIM closed loop (released LTF policy, 25 scenarios × 3 seeds)</th><th>HD-Score</th><th>Change vs. no fixer (paired)</th></tr></thead>
       <tbody>
@@ -208,7 +208,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
     <h3>Our renderer against gsplat</h3>
     <figure>
       <img src="assets/figures/fig_own_vs_gsplat.jpg" alt="Renders from gsplat and from our renderer, with a magnified difference image">
-      <figcaption>Figure 6. Renders from our projection code agree with gsplat to 90.8 dB PSNR on average (difference magnified 1000×, bottom left); gradients agree with cosine similarity of at least 0.99996; a full refit with our renderer scores within the variation between gsplat runs. Training is 1.44 times slower.</figcaption>
+      <figcaption>Figure 6. Renders from our projection code agree with gsplat to 90.8 dB PSNR on average (difference magnified 1000×, bottom left); gradients agree with cosine similarity of at least 0.99996; a full refit with our renderer is within 0.07 dB PSNR and 0.003 LPIPS of two gsplat fits. A full fit takes 1.44 times as long; the results above use gsplat.</figcaption>
     </figure>
   </section>
 
@@ -221,11 +221,11 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
   <section id="problems">
     <h2>6. Problems Encountered</h2>
     <ul>
-      <li>NVIDIA's released Difix trainer needed six fixes to run (undefined names, a missing attribute, an ignored step limit) and exceeded 24 GB with the reference view, so the matched comparison uses the single-view setting.</li>
+      <li>NVIDIA's released Difix trainer needed five patches to run (undefined names, a missing attribute, logging setup, a hard-coded image size), ignores its step limit, and exceeded 24 GB with the reference view, so the matched comparison uses the single-view setting.</li>
       <li>DL3DV granted only its sample release, so the re-implementation check uses three held-out scenes. EUVS's rotation-only setting requires nuPlan data under a separate license and was not run.</li>
       <li>The Para-Lane lanes were driven at different times, so traffic differs between render and real image; moving objects are masked in all metrics.</li>
       <li>MV2's poses are normalized (metric scale assumes a 1.40 m car camera), and its two vehicles are about 7.6 m apart laterally, so camera height could not be isolated there; we rely on a road-plane warp of the real image instead.</li>
-      <li>The color-and-contrast lane-paint detector also responds to hard shadows and bright curbs on three roads, which makes paint precision and recall noisy there; lane F1 is unaffected.</li>
+      <li>The color-and-contrast lane-paint detector also responds to hard shadows and bright curbs on four roads, which makes paint precision and recall noisy there; lane F1 is unaffected.</li>
       <li>FaithFusion's full pipeline depends on an unreleased restorer; NVIDIA Fixer needs NVIDIA Transformer Engine, which we could not build; the other HUGSIM driving policies depend on outdated software.</li>
       <li>The small U-Net trained from scratch mostly blurs and does not transfer. Our first renderer was 12 times slower than gsplat until we restructured its small matrix products.</li>
     </ul>
