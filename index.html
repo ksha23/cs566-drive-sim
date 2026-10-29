@@ -91,7 +91,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
       <b>Summary</b>
       <ul>
         <li>A Gaussian-splat simulator rebuilt from one drive is trustworthy only near the recorded path: agreement between lanes detected on the render and on the real image falls from 0.98 on the path to 0.18 one lane over (3 m) and 0.01 two lanes over (6 m).</li>
-        <li>Diffusion-based fixers recover part of this. Fixers trained on real neighboring-lane pairs reach 0.77–0.79 at 3 m and about 0.5 at 6 m; the released generic ones reach 0.57–0.69 at 3 m.</li>
+        <li>Diffusion-based fixers recover part of this. Fixers trained on our Para-Lane pairs reach 0.77–0.79 at 3 m and about 0.5 at 6 m; the released generic ones reach 0.57–0.69 at 3 m.</li>
         <li>Realism and correctness diverge: fixers invent lane paint and vehicles. Repairing the 3D scene instead of each image invents the least.</li>
         <li>Gains depend strongly on the road, transfer only partially to other cities, and do not raise closed-loop driving scores.</li>
       </ul>
@@ -110,7 +110,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
     <ol class="steps">
       <li>Reconstruct a Gaussian splat of each road from one lane (LiDAR initialization and depth supervision, a learned sky model, moving objects masked).</li>
       <li>Render it at the neighboring lanes' real poses, and additionally with the camera turned (heading) or raised and lowered (camera height).</li>
-      <li>Repair the renders with each method: the released Difix and NVIDIA Fixer; our re-implementation of the Difix training procedure, trained on neighboring-lane pairs; the released Difix fine-tuned on the same pairs (Difix-FT); a small U-Net trained from scratch; the progressive 3D update of Difix3D+, which adds repaired views back into the splat; and a road-surface prior fitted to LiDAR, which involves no image generation.</li>
+      <li>Repair the renders with each method: the released Difix and NVIDIA Fixer; our re-implementation of the Difix training procedure, trained on our Para-Lane pairs (renders at a neighboring lane's pose with the real image there, plus the Difix3D+ pair types and on-path identity pairs); the released Difix fine-tuned on the same pairs (Difix-FT); a small U-Net trained from scratch; the progressive 3D update of Difix3D+, which adds repaired views back into the splat; and a road-surface prior fitted to LiDAR, which involves no image generation.</li>
       <li>Measure trust against the real image: lane agreement (F1 between CLRNet lanes on the render and on the real image), perceptual distance (LPIPS), invented and erased lane paint, and spurious vehicles (YOLO11 detections with no counterpart in the real image). Intervals are 95% bootstrap intervals over lane-pair sequences.</li>
       <li>Test transfer to other cities (EUVS/MARS in the US, MV2 in India) and closed-loop driving in the HUGSIM simulator with a released policy.</li>
     </ol>
@@ -227,7 +227,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
       <li>MV2's poses are normalized (metric scale assumes a 1.40 m car camera), and its two vehicles are about 7.6 m apart laterally, so camera height could not be isolated there; we rely on a road-plane warp of the real image instead.</li>
       <li>The color-and-contrast lane-paint detector also responds to hard shadows and bright curbs on four roads, which makes paint precision and recall noisy there; lane F1 is unaffected.</li>
       <li>FaithFusion's full pipeline depends on an unreleased restorer; NVIDIA Fixer needs NVIDIA Transformer Engine, which we could not build; the other HUGSIM driving policies depend on outdated software.</li>
-      <li>The small U-Net trained from scratch mostly blurs and does not transfer. Our first renderer was 12 times slower than gsplat until we restructured its small matrix products.</li>
+      <li>The small U-Net trained from scratch mostly blurs the render and gains little lane agreement. Our first renderer was 12 times slower than gsplat until we restructured its small matrix products.</li>
     </ul>
   </section>
 
