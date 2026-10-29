@@ -223,7 +223,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
     <ul>
       <li>NVIDIA's released Difix trainer needed five patches to run (undefined names, a missing attribute, logging setup, a hard-coded image size), ignores its step limit, and exceeded 24 GB with the reference view, so the matched comparison uses the single-view setting.</li>
       <li>DL3DV granted only its sample release, so the re-implementation check uses three held-out scenes. EUVS's rotation-only setting requires nuPlan data under a separate license and was not run.</li>
-      <li>The Para-Lane lanes were driven at different times, so traffic differs between render and real image; moving objects are masked in all metrics.</li>
+      <li>The Para-Lane lanes were driven at different times, so traffic differs between render and real image; moving objects are masked in the image and paint metrics, while lane F1 uses whole images.</li>
       <li>MV2's poses are normalized (metric scale assumes a 1.40 m car camera), and its two vehicles are about 7.6 m apart laterally, so camera height could not be isolated there; we rely on a road-plane warp of the real image instead.</li>
       <li>The color-and-contrast lane-paint detector also responds to hard shadows and bright curbs on four roads, which makes paint precision and recall noisy there; lane F1 is unaffected.</li>
       <li>FaithFusion's full pipeline depends on an unreleased restorer; NVIDIA Fixer needs NVIDIA Transformer Engine, which we could not build; the other HUGSIM driving policies depend on outdated software.</li>
