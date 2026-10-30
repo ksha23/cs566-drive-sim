@@ -227,7 +227,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
       <li>MV2's poses are normalized (metric scale assumes a 1.40 m car camera), and its two vehicles are about 7.6 m apart laterally, so camera height could not be isolated there; we rely on a road-plane warp of the real image instead.</li>
       <li>The color-and-contrast lane-paint detector also responds to hard shadows and bright curbs on four roads, which makes paint precision and recall noisy there; lane F1 is unaffected.</li>
       <li>FaithFusion's full pipeline depends on an unreleased restorer; NVIDIA Fixer needs NVIDIA Transformer Engine, which we could not build; the other HUGSIM driving policies depend on outdated software.</li>
-      <li>The small U-Net trained from scratch mostly blurs the render and gains little lane agreement. Our first renderer was 12 times slower than gsplat until we restructured its small matrix products.</li>
+      <li>The small U-Net trained from scratch falls far short of the diffusion fixers and gains little lane agreement. Our first renderer was 12 times slower than gsplat until we restructured its small matrix products.</li>
     </ul>
   </section>
 
