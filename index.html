@@ -146,7 +146,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
         <tr><td>Comparison methods</td><td>Integration and batch inference; a small compatibility layer so NVIDIA Fixer runs without NVIDIA Transformer Engine; FaithFusion's information-gain map computed on our splats.</td><td>Released Difix, NVIDIA Fixer, FaithFusion, HUGSIM with the LTF policy</td></tr>
       </tbody>
     </table></div>
-    <p>Everything ran on one RTX 3090 (24 GB). Fitting a road takes about 5 minutes, fine-tuning a fixer about an hour, and reconstructing, repairing and scoring one additional road with every method about 1.5–2 GPU-hours.</p>
+    <p>Most of the work ran on one RTX 3090 (24 GB); in the final round, the heading and camera-height repairs on three roads and the FaithFusion updates on four roads ran as preemptible jobs on a university GPU cluster. Fitting a road takes about 5 minutes, fine-tuning a fixer about an hour, and reconstructing, repairing and scoring one additional road with every method about 1.5–2 GPU-hours.</p>
   </section>
 
   <section id="results">
@@ -255,12 +255,13 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
 
   <section id="code">
     <h2>8. Source and Executable Code</h2>
-    <p>The code is at <a href="https://github.com/ksha23/cs566-D-drive-sim-trust">github.com/ksha23/cs566-D-drive-sim-trust</a> (<a href="https://github.com/ksha23/cs566-D-drive-sim-trust/archive/refs/heads/main.zip">download as ZIP</a>). The repository contains the full pipeline, a stage-by-stage reproduction guide with runtimes, and three command-line tools:</p>
+    <p>The code is at <a href="https://github.com/ksha23/cs566-drive-sim-trust">github.com/ksha23/cs566-drive-sim-trust</a> (<a href="https://github.com/ksha23/cs566-drive-sim-trust/archive/refs/heads/main.zip">download as ZIP</a>). The repository contains the full pipeline, a stage-by-stage reproduction guide with runtimes, the per-image results behind every table, and three command-line tools:</p>
     <ul>
       <li><code>src/tools/render_offpath.py</code>: render a fitted splat at shifted, turned or raised camera poses.</li>
       <li><code>src/tools/fix_folder.py</code>: apply any of the fixers to a folder of rendered images.</li>
       <li><code>src/tools/pair_metrics.py</code>: compute the trust metrics for render and real image pairs.</li>
     </ul>
+    <p>A quick check needs no GPU and no datasets and takes a few minutes: <code>bash scripts/quick_check.sh</code> rebuilds the final tables from the per-image results and scores one bundled example frame with the same metrics (installation in the README).</p>
     <p class="meta">Datasets and model weights are not redistributed; the README links to each source and its license. Our code is MIT-licensed; third-party components keep their own licenses.</p>
   </section>
 
