@@ -39,6 +39,7 @@ h3{font-size:1.08rem;margin:20px 0 8px}
 p{margin:8px 0}
 .tldr{background:var(--accent-soft);border-radius:12px;padding:16px 20px}
 .tldr ul{margin:4px 0 0;padding-left:20px}
+.tldr h2{font-size:1.05rem;margin:0 0 4px}
 .note{background:var(--warn-soft);color:var(--fg);border-left:4px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:.95rem}
 figure{margin:16px 0;max-width:100%;min-width:0}
 figure img,video{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:var(--card)}
@@ -88,12 +89,12 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
       <figcaption>A typical frame one lane over (3.0 m). Top left is the real image at this pose; the other panels are the splat built from a neighboring lane, raw and after each repair method, with lane agreement, lane-paint precision/recall, LPIPS and spurious vehicles below each panel. The frame was chosen because its scores are closest to the pooled averages.</figcaption>
     </figure>
     <div class="tldr">
-      <b>Summary</b>
+      <h2>Summary</h2>
       <ul>
-        <li>A Gaussian-splat simulator rebuilt from one drive is trustworthy only near the recorded path: agreement between lanes detected on the render and on the real image falls from 0.98 on the path to 0.18 one lane over (3 m) and 0.01 two lanes over (6 m).</li>
+        <li>A Gaussian-splat simulator rebuilt from one drive is trustworthy only near the recorded path: agreement between lanes detected on the render and on the real image falls from 0.98 on the path to 0.18 one lane over (3 m) and 0.01 two lanes over (6 m). On each of the eight test roads it lies between 0.06 and 0.35 one lane over.</li>
         <li>Diffusion-based fixers recover part of this. Fixers trained on our Para-Lane pairs reach 0.77–0.79 at 3 m and about 0.5 at 6 m; the released generic ones reach 0.57–0.69 at 3 m.</li>
-        <li>Realism and correctness diverge: fixers invent lane paint and vehicles. Repairing the 3D scene instead of each image invents the least.</li>
-        <li>Gains depend strongly on the road, transfer only partially to other cities, and do not raise closed-loop driving scores.</li>
+        <li>Realism and correctness diverge: fixers invent lane paint and vehicles, and the two that copy from a recorded reference view add vehicles on every road. Repairing the 3D scene instead of each image invents the least.</li>
+        <li>Gains depend strongly on the road, are small when the camera height changes, transfer only partially to other cities, and do not raise closed-loop driving scores (75 runs per fixer).</li>
       </ul>
     </div>
   </section>
@@ -114,7 +115,20 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
       <li>Measure trust against the real image: lane agreement (F1 between CLRNet lanes on the render and on the real image), perceptual distance (LPIPS), invented and erased lane paint, and spurious vehicles (YOLO11 detections with no counterpart in the real image). Intervals are 95% bootstrap intervals over lane-pair sequences.</li>
       <li>Test transfer to other cities (EUVS/MARS in the US, MV2 in India) and closed-loop driving in the HUGSIM simulator with a released policy.</li>
     </ol>
-    <p>The plan was organized in tiers: a core study (Para-Lane, the released fixers and our Difix re-implementation), extensions (small fixer, road prior, progressive update, more roads, heading) and stretch goals (camera height, other datasets, FaithFusion, closed loop). Every tier has results; heading, camera height, the other datasets, FaithFusion and closed loop cover part of what was planned (see the mid-term report).</p>
+    <p>The proposal organized the work in tiers: a core study (Para-Lane, the released fixers and our Difix re-implementation), extensions (small fixer, road prior, progressive update, more roads, heading) and stretch goals (camera height, other datasets, FaithFusion, closed loop). The mid-term report listed what remained; its status:</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Remaining at the mid-term</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Heading and camera height on all eight roads</td><td>Done (Figure 5)</td></tr>
+        <tr><td>Released Difix-ref on the four roads it had not been run on</td><td>Done; included in the eight-road table</td></tr>
+        <tr><td>FaithFusion: information-gain-weighted against flat progressive update on all eight roads</td><td>Done (Section 4, FaithFusion)</td></tr>
+        <tr><td>Our Difix re-implementation in the closed loop</td><td>Done (75 runs)</td></tr>
+        <tr><td>A second closed-loop driving policy</td><td>Not done: the other policies HUGSIM supports depend on outdated software</td></tr>
+        <tr><td>EUVS rotation-only setting</td><td>Not run: it requires nuPlan data under a separate license</td></tr>
+        <tr><td>Mark invented and erased content in the videos</td><td>Done (Section 5)</td></tr>
+        <tr><td>Prepare the code for release</td><td>Done (Section 8)</td></tr>
+      </tbody>
+    </table></div>
   </section>
 
   <section id="implementation">
@@ -147,6 +161,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
       <tbody>
         <tr><td>Raw render</td><td>0.18 [0.13, 0.24]</td><td>0.01</td><td>0.49</td><td>0.064</td></tr>
         <tr><td>Released Difix</td><td>0.57 [0.47, 0.67]</td><td>0.21</td><td>0.39</td><td>0.093</td></tr>
+        <tr><td>Released Difix-ref (with a reference view)</td><td>0.64 [0.54, 0.74]</td><td>0.34</td><td>0.30</td><td>0.203</td></tr>
         <tr><td>NVIDIA Fixer</td><td>0.69 [0.59, 0.78]</td><td>0.41</td><td>0.45</td><td>0.099</td></tr>
         <tr><td>Difix-FT (released weights fine-tuned on our pairs)</td><td>0.79 [0.70, 0.87]</td><td>0.52</td><td>0.29</td><td>0.030</td></tr>
         <tr><td>Our Difix re-implementation</td><td>0.77 [0.68, 0.85]</td><td>0.53</td><td>0.28</td><td>0.148</td></tr>
@@ -155,7 +170,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
         <tr><td>Road-surface prior</td><td>0.34 [0.27, 0.41]</td><td>0.05</td><td>0.47</td><td>0.061</td></tr>
       </tbody>
     </table></div>
-    <p>On the path every method agrees with the real image (lane F1 0.96–0.98). Our re-implementation adds spurious vehicles on all eight roads (+0.089 per image [+0.062, +0.117] relative to the raw render); Difix-FT does not on average. The progressive update raises lane F1 by +0.33 [+0.19, +0.49] at about 3 m and produces the fewest spurious vehicles, but helps little at 6 m.</p>
+    <p>On the path every method agrees with the real image (lane F1 0.96–0.98). The two fixers that use a recorded reference view add spurious vehicles on all eight roads relative to the raw render: the released Difix-ref +0.125 per image [+0.069, +0.185] and our re-implementation +0.089 [+0.063, +0.115]; Difix-FT, which has no reference view, does not on average. The progressive update raises lane F1 by +0.33 [+0.19, +0.49] at about 3 m and produces the fewest spurious vehicles, but helps little at 6 m.</p>
 
     <h3>Invented and erased content</h3>
     <figure>
@@ -166,7 +181,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
     <h3>Variation across roads</h3>
     <figure>
       <img src="assets/figures/fig2_lane_f1_per_road_3m.png" alt="Lane agreement one lane over for each road and method">
-      <figcaption>Figure 3. Difix-FT and our re-implementation rank among the top three on every road, while the order of the other methods varies; the level varies even more: the best fixer reaches 0.95 on a curved road and at most 0.39 under an elevated highway with hard shadows.</figcaption>
+      <figcaption>Figure 3. Difix-FT and our re-implementation rank among the top three on every road, while the order of the other methods varies; the level varies even more: the best fixer reaches 0.99 on one road and at most 0.39 under an elevated highway with hard shadows.</figcaption>
     </figure>
     <figure>
       <img src="assets/figures/qual_failure.jpg" alt="Failure case under an elevated highway, two lanes over">
@@ -198,12 +213,13 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
       <thead><tr><th>HUGSIM closed loop (released LTF policy, 25 scenarios × 3 seeds)</th><th>HD-Score</th><th>Change vs. no fixer (paired)</th></tr></thead>
       <tbody>
         <tr><td>No fixer</td><td>0.408 [0.326, 0.486]</td><td>–</td></tr>
-        <tr><td>Released Difix</td><td>0.392</td><td>−0.015 [−0.064, +0.034]</td></tr>
-        <tr><td>Difix-FT</td><td>0.403</td><td>−0.005 [−0.054, +0.048]</td></tr>
-        <tr><td>NVIDIA Fixer</td><td>0.356</td><td>−0.051 [−0.101, −0.004]</td></tr>
+        <tr><td>Released Difix</td><td>0.392</td><td>−0.015 [−0.062, +0.034]</td></tr>
+        <tr><td>Difix-FT</td><td>0.403</td><td>−0.005 [−0.054, +0.046]</td></tr>
+        <tr><td>NVIDIA Fixer</td><td>0.356</td><td>−0.051 [−0.099, −0.003]</td></tr>
+        <tr><td>Our Difix re-implementation (with reference view)</td><td>0.385</td><td>−0.023 [−0.074, +0.028]</td></tr>
       </tbody>
     </table></div>
-    <p>No fixer improves the driving score, and the variation between policy seeds (0.31–0.46) exceeds every fixer effect. Without a fixer, the policy spends 44% of its steps 1–4.5 m from the recorded trajectory and 29% more than 4.5 m from it, so the fixers are exercised at the offsets of the Para-Lane study. FaithFusion's per-pixel information-gain map partly predicts invented lane paint one lane over (AUROC 0.67–0.76), but weighting the progressive update with it made no measurable difference.</p>
+    <p>No fixer improves the driving score, our re-implementation included; only NVIDIA Fixer's change is distinguishable from zero, and it is negative. The variation between policy seeds (0.31–0.46) exceeds every fixer effect. For the reference-view fixer, each step uses the recorded frame nearest to the vehicle's current position on the ground. Without a fixer, the policy spends 44% of its steps 1–4.5 m from the recorded trajectory and 29% more than 4.5 m from it, so the fixers are exercised at the offsets of the Para-Lane study. FaithFusion's per-pixel information-gain map partly predicts invented lane paint one lane over (AUROC 0.67–0.76), but weighting the progressive update with it made no measurable difference.</p>
 
     <h3>Our renderer against gsplat</h3>
     <figure>
@@ -214,7 +230,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
 
   <section id="videos">
     <h2>5. Videos</h2>
-    <p>Side-by-side clips across roads, deviation types and datasets. Each clip states whether a real camera frame exists at that viewpoint.</p>
+    <p>Side-by-side clips across roads, deviation types and datasets. Each clip states whether a real camera frame exists at that viewpoint. In the four Para-Lane clips with a real frame, marks computed with the same rules as the metrics show invented lane paint (orange), erased lane paint (blue) and vehicles with no counterpart in the real image (red boxes).</p>
     <div id="video-grid" class="grid"><p class="meta">Loading videos…</p></div>
   </section>
 
@@ -233,7 +249,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
 
   <section id="discussion">
     <h2>7. Discussion and Limitations</h2>
-    <p>Off-path trust in a splat simulator is limited to roughly the width of one lane even with the best repair methods, and realism metrics alone overstate it: the method with the best LPIPS invents the most vehicles. Repairing the 3D scene instead of each image is the most conservative option, but its benefit varies widely between roads. Fixers trained on one city do not carry over to others, and none changes closed-loop driving scores in HUGSIM.</p>
+    <p>Off-path trust in a splat simulator is limited to roughly the width of one lane even with the best repair methods, and realism metrics alone overstate it: the fixers with the best LPIPS include the two that add the most vehicles. Repairing the 3D scene instead of each image is the most conservative option, but its benefit varies widely between roads. Fixers trained on one city do not carry over to others, and none changes closed-loop driving scores in HUGSIM.</p>
     <p>The main results come from one city, one camera rig and daytime conditions, with eight test roads. Lane and vehicle detectors are proxies for what a driving system perceives, and the closed-loop results rest on a single released policy.</p>
   </section>
 

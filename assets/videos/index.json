@@ -65,7 +65,7 @@
   "scenario": "lateral offset, curved road (new test scene)",
   "dataset": "Para-Lane",
   "shown": "real far-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
-  "caption": "scene_14 was added as a held-out test scene (never used for training or selection): the road bends by 30-50 deg over ~110 m (per pass). Lane 0's splat is rendered where lane 2 drove. Our driving-trained Difix draws crisp lane lines, but not always where the real ones are (compare the markings with the real frame): plausible is not the same as faithful.",
+  "caption": "scene_14 was added as a held-out test scene (never used for training or selection): the road bends by 30-50 deg over ~110 m (per pass). Lane 0's splat is rendered where lane 2 drove. Our driving-trained Difix draws crisp lane lines, but not always where the real ones are (compare the markings with the real frame): plausible is not the same as faithful. Marks (same rules as the metrics): orange = invented lane paint, blue = erased lane paint, red box = spurious vehicle.",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  },
@@ -75,7 +75,7 @@
   "scenario": "lateral offset, far lane",
   "dataset": "Para-Lane",
   "shown": "real far-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
-  "caption": "At 7.7 m the splat has never seen most of the road surface. Every fixer produces a cleaner-looking image, but none recovers the real lane geometry reliably; lane agreement stays low.",
+  "caption": "At 7.7 m the splat has never seen most of the road surface. Every fixer produces a cleaner-looking image, but none recovers the real lane geometry reliably; lane agreement stays low. Marks (same rules as the metrics): orange = invented lane paint, blue = erased lane paint, red box = spurious vehicle.",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  },
@@ -85,7 +85,7 @@
   "scenario": "lateral offset, straight road",
   "dataset": "Para-Lane",
   "shown": "real adjacent-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
-  "caption": "The splat was fitted on lane 0 only and is rendered where lane 1 actually drove. Released Difix sharpens but does not restore the missing lane paint; our driving-trained Difix restores most lane lines; the small U-Net blurs. Cars differ between passes (the lanes were driven at different times).",
+  "caption": "The splat was fitted on lane 0 only and is rendered where lane 1 actually drove. Released Difix sharpens but does not restore the missing lane paint; our driving-trained Difix restores most lane lines; the small U-Net changes little. Cars differ between passes (the lanes were driven at different times). Marks (same rules as the metrics): orange = invented lane paint, blue = erased lane paint, red box = spurious vehicle.",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  },
@@ -95,7 +95,7 @@
   "scenario": "lateral offset, shadows + traffic (new test scene)",
   "dataset": "Para-Lane",
   "shown": "real adjacent-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
-  "caption": "scene_15 (held-out test scene) runs under an elevated highway: hard shadows, pillars and the most traffic of all Para-Lane scenes we used. Vehicles are pasted from the real frame only for the metrics, not here: cars in the renders are whatever the splat and fixer produce (the lanes were driven at different times).",
+  "caption": "scene_15 (held-out test scene) runs under an elevated highway: hard shadows, pillars and the most traffic of all Para-Lane scenes we used. Vehicles are pasted from the real frame only for the metrics, not here: cars in the renders are whatever the splat and fixer produce (the lanes were driven at different times). Marks (same rules as the metrics): orange = invented lane paint, blue = erased lane paint, red box = spurious vehicle.",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  },
