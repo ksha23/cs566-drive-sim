@@ -15,13 +15,13 @@
   "scenario": "translation + rotation (EUVS level 3), transfer",
   "dataset": "EUVS (MARS)",
   "shown": "real test frame | raw splat | released Difix-ref | NVIDIA Fixer | our Difix (ref) | our U-Net",
-  "caption": "The test traversal takes another route through the same place (median 5.5 m and 89 deg from the nearest training camera). Only the released, generically trained fixers help here; our Para-Lane-trained models do not transfer.",
+  "caption": "The test traversal takes another route through the same place (median 5.5 m and 89° from the nearest training camera). Only the released, generically trained fixers help here; our Para-Lane-trained models do not transfer.",
   "real_ground_truth": true,
   "attribution": "Data: EUVS benchmark (ICCV 2025) MARS scenes (MARS, CVPR 2024; CC BY-NC-SA 4.0). CS 566, non-commercial."
  },
  {
   "file": "assets/videos/heading_sweep_pm15deg.mp4",
-  "title": "Para-Lane scene_16: heading sweep, -15 to +15 deg",
+  "title": "Para-Lane scene_16: heading sweep, −15° to +15°",
   "scenario": "heading (yaw) about the camera center",
   "dataset": "Para-Lane",
   "shown": "real frame rotated by the exact homography (black = never seen by the real camera) | raw | released Difix | our Difix (ref) | our U-Net | NVIDIA Fixer",
@@ -41,7 +41,7 @@
  },
  {
   "file": "assets/videos/hugsim_nuscenes_offsets.mp4",
-  "title": "HUGSIM nuScenes scene-0064: ego car shifted 0 -> 3 m (no real frame)",
+  "title": "HUGSIM nuScenes scene-0064: ego car shifted 0 → 3 m (no real frame)",
   "scenario": "lateral offset in a released simulator scene",
   "dataset": "nuScenes via HUGSIM",
   "shown": "(no real frame) | raw HUGSIM render | released Difix | NVIDIA Fixer | Difix-FT | our U-Net",
@@ -51,7 +51,7 @@
  },
  {
   "file": "assets/videos/lane_change_sweep_0_3_6m.mp4",
-  "title": "Para-Lane scene_16: lane-change sweep, 0 -> 3 -> 6 m",
+  "title": "Para-Lane scene_16: lane-change sweep, 0 → 3 → 6 m",
   "scenario": "continuous lateral sweep",
   "dataset": "Para-Lane",
   "shown": "nearest real frame (only on the two real lanes) | raw | released Difix | our Difix (ref) | our U-Net | road prior | progressive splat",
@@ -64,8 +64,8 @@
   "title": "Para-Lane scene_14 (new test road): curve, two lanes over (median 5.3 m)",
   "scenario": "lateral offset, curved road (new test scene)",
   "dataset": "Para-Lane",
-  "shown": "real far-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
-  "caption": "scene_14 was added as a held-out test scene (never used for training or selection): the road bends by 30-50 deg over ~110 m (per pass). Lane 0's splat is rendered where lane 2 drove. Our driving-trained Difix draws crisp lane lines, but not always where the real ones are (compare the markings with the real frame): plausible is not the same as faithful. Marks (same rules as the metrics): orange = invented lane paint, blue = erased lane paint, red box = spurious vehicle.",
+  "shown": "real far-lane frame | raw splat | released Difix | our Difix re-implementation (ref) | our U-Net | NVIDIA Fixer",
+  "caption": "scene_14 was added as a held-out test scene (never used for training or selection): the road bends by 30-50° over ~110 m (per pass). Lane 0's splat is rendered where lane 2 drove. Our driving-trained Difix draws crisp lane lines, but not always where the real ones are (compare the markings with the real frame): plausible is not the same as faithful. Marks (same rules as the metrics): orange = invented lane paint, blue = erased lane paint, red box = spurious vehicle.",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  },
@@ -74,7 +74,7 @@
   "title": "Para-Lane scene_17: straight road, two lanes over (median 7.8 m)",
   "scenario": "lateral offset, far lane",
   "dataset": "Para-Lane",
-  "shown": "real far-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
+  "shown": "real far-lane frame | raw splat | released Difix | our Difix re-implementation (ref) | our U-Net | NVIDIA Fixer",
   "caption": "About 7.8 m from the recorded lane, the splat has never seen most of the road surface. Every fixer produces a cleaner-looking image, but none recovers the real lane geometry reliably; lane agreement stays low. Marks (same rules as the metrics): orange = invented lane paint, blue = erased lane paint, red box = spurious vehicle.",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
@@ -84,7 +84,7 @@
   "title": "Para-Lane scene_16: straight road, one lane over (median 3.3 m)",
   "scenario": "lateral offset, straight road",
   "dataset": "Para-Lane",
-  "shown": "real adjacent-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
+  "shown": "real adjacent-lane frame | raw splat | released Difix | our Difix re-implementation (ref) | our U-Net | NVIDIA Fixer",
   "caption": "The splat was fitted on lane 0 only and is rendered where lane 1 actually drove. Released Difix sharpens but does not restore the missing lane paint; our driving-trained Difix restores most lane lines; the small U-Net changes little. Cars differ between passes (the lanes were driven at different times). Marks (same rules as the metrics): orange = invented lane paint, blue = erased lane paint, red box = spurious vehicle.",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
@@ -94,7 +94,7 @@
   "title": "Para-Lane scene_15 (new test road): under a highway, one lane over (median 4.1 m)",
   "scenario": "lateral offset, shadows + traffic (new test scene)",
   "dataset": "Para-Lane",
-  "shown": "real adjacent-lane frame | raw splat | released Difix | our Difix reimplementation (ref) | our U-Net | NVIDIA Fixer",
+  "shown": "real adjacent-lane frame | raw splat | released Difix | our Difix re-implementation (ref) | our U-Net | NVIDIA Fixer",
   "caption": "scene_15 (held-out test scene) runs under an elevated highway: hard shadows, pillars and the most traffic of all Para-Lane scenes we used. Vehicles are pasted from the real frame only for the metrics, not here: cars in the renders are whatever the splat and fixer produce (the lanes were driven at different times). Marks (same rules as the metrics): orange = invented lane paint, blue = erased lane paint, red box = spurious vehicle.",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
@@ -105,7 +105,7 @@
   "scenario": "progressive update",
   "dataset": "Para-Lane",
   "shown": "real | original splat | refined without fixer (control) | progressive with Difix-FT | progressive with our Difix",
-  "caption": "The splat itself is refined with fixed pseudo-views at +-3 m and +-6 m (Difix3D+ progressive update), then rendered WITHOUT any fixer. On scene_16 the lane lines come back in 3D (lane F1 0.18 -> 0.90 at ~3 m); on scene_17 the same procedure helps far less, so this gain is scene-dependent.",
+  "caption": "The splat itself is refined with fixed pseudo-views at ±3 m and ±6 m (Difix3D+ progressive update), then rendered without any fixer. On scene_16 the lane lines come back in 3D (lane F1 0.18 → 0.90 at ~3 m); on scene_17 the same procedure helps far less, so this gain is scene-dependent.",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  },
@@ -115,7 +115,7 @@
   "scenario": "road prior",
   "dataset": "Para-Lane",
   "shown": "real | raw splat | splat fitted with the LiDAR road-surface prior",
-  "caption": "A height/slope field fitted to LiDAR pulls road Gaussians onto the road plane and flattens them. No image generator is involved; lane lines are sharper off-path, while the splat's other errors remain (spurious vehicles one lane over: 0.061 per image, against 0.064 for the raw render).",
+  "caption": "A height/slope field fitted to LiDAR pulls road Gaussians onto the road plane and flattens them. No image generator is involved; lane lines are sharper off-path, while the splat's other errors remain (over the eight test roads, spurious vehicles one lane over: 0.061 per image, against 0.064 for the raw render).",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  }
