@@ -146,7 +146,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
         <tr><td>Comparison methods</td><td>Integration and batch inference; a small compatibility layer so NVIDIA Fixer runs without NVIDIA Transformer Engine; FaithFusion's information-gain map computed on our splats.</td><td>Released Difix, NVIDIA Fixer, FaithFusion, HUGSIM with the LTF policy</td></tr>
       </tbody>
     </table></div>
-    <p>Most of the work ran on one RTX 3090 (24 GB); in the final round, the heading and camera-height repairs on three roads and the FaithFusion updates on four roads ran as preemptible jobs on a university GPU cluster. Fitting a road takes about 5 minutes, fine-tuning a fixer about an hour, and reconstructing, repairing and scoring one additional road with every method about 1.5–2 GPU-hours.</p>
+    <p>Most of the work ran on one RTX 3090 (24 GB); in the final round, the heading and camera-height repairs on three roads and the FaithFusion updates on four roads were computed and scored as preemptible jobs on a university GPU cluster. Fitting a road takes about 5 minutes, fine-tuning a fixer about an hour, and reconstructing, repairing and scoring one additional road with every method about 1.5–2 GPU-hours.</p>
   </section>
 
   <section id="results">
@@ -204,8 +204,11 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
     <h3>Heading and camera height</h3>
     <figure>
       <img src="assets/figures/fig3_heading_height.png" alt="Effect of turning and of raising or lowering the camera">
-      <figcaption>Figure 5. Turning the camera by up to ±15° barely changes lane agreement (heading has an exact ground truth from a rotation warp). Raising or lowering the camera by 1 m costs the raw render 5–7 dB on the road region, scored against a road-plane warp of the real image.</figcaption>
+      <figcaption>Figure 5. Over the eight roads, turning the camera by up to ±15° barely changes lane agreement: the raw render's lane F1 is 0.98 straight ahead and 0.95 at ±15° (heading has an exact ground truth from a rotation warp). Raising the camera by 1 m costs the raw render 7.2 dB on the road region and lowering it by 1 m costs 5.2 dB, scored against a road-plane warp of the real image; the repaired renders lose about 3–6 dB.</figcaption>
     </figure>
+
+    <h3>FaithFusion</h3>
+    <p>FaithFusion [2] weights each pixel of a repaired view by how much new information it adds to the splat (expected information gain). On the eight roads, this map partly predicts where a fixer invents lane paint one lane over: AUROC 0.67–0.75 across the five fixers, against 0.31–0.48 for render coverage alone. Used as weights in the progressive update, with the released Difix-ref as the restorer, it lowers lane F1 one lane over relative to FaithFusion's flat weighting (−0.026 [−0.038, −0.015] over roads; lower on seven of the eight roads) and leaves lane paint and spurious vehicles unchanged.</p>
 
     <h3>Other cities and closed-loop driving</h3>
     <p>On EUVS/MARS routes (US) and MV2 car/scooter pairs (India), the fixers trained on Para-Lane transfer only partially: the generic released Difix-ref gives the largest LPIPS improvement (EUVS: 0.522 raw, 0.421 Difix-ref), Difix-FT becomes worse than the raw render on EUVS (0.589), and on MV2 no method reaches lane F1 0.1.</p>
@@ -219,7 +222,7 @@ code{font-size:.88em;background:var(--card);border:1px solid var(--line);border-
         <tr><td>Our Difix re-implementation (with reference view)</td><td>0.385</td><td>−0.023 [−0.074, +0.028]</td></tr>
       </tbody>
     </table></div>
-    <p>No fixer improves the driving score, our re-implementation included; only NVIDIA Fixer's change is distinguishable from zero, and it is negative. The variation between policy seeds (0.31–0.46) exceeds every fixer effect. For the reference-view fixer, each step uses the recorded frame nearest to the vehicle's current position on the ground. Without a fixer, the policy spends 44% of its steps 1–4.5 m from the recorded trajectory and 29% more than 4.5 m from it, so the fixers are exercised at the offsets of the Para-Lane study. FaithFusion's per-pixel information-gain map partly predicts invented lane paint one lane over (AUROC 0.67–0.76), but weighting the progressive update with it made no measurable difference.</p>
+    <p>No fixer improves the driving score, our re-implementation included; only NVIDIA Fixer's change is distinguishable from zero, and it is negative. The variation between policy seeds (0.31–0.46) exceeds every fixer effect. For the reference-view fixer, each step uses the recorded frame nearest to the vehicle's current position on the ground. Without a fixer, the policy spends 44% of its steps 1–4.5 m from the recorded trajectory and 29% more than 4.5 m from it, so the fixers are exercised at the offsets of the Para-Lane study.</p>
 
     <h3>Our renderer against gsplat</h3>
     <figure>
