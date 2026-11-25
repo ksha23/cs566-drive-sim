@@ -7,6 +7,7 @@ Served with GitHub Pages from `main` / root. It holds only the write-up, figures
 or model weights are included. Media are derived from Para-Lane (CC BY-NC 4.0), nuScenes via HUGSIM and EUVS/MARS for
 non-commercial academic use.
 
-To add videos, drop MP4s in `assets/videos/` and list them in `assets/videos/index.json`.
+To add videos, drop MP4s in `assets/videos/`, list them in `assets/videos/index.json` and run
+`python3 tools/build_videos.py`, which writes the video cards into `index.html`.
 
 The page must not be modified after the course's project-webpage due date (Dec 10, 2026).

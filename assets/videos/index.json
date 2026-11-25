@@ -22,7 +22,7 @@
  {
   "file": "assets/videos/heading_sweep_pm15deg.mp4",
   "title": "Para-Lane scene_16: heading sweep, -15 to +15 deg",
-  "scenario": "heading (yaw) about the camera centre",
+  "scenario": "heading (yaw) about the camera center",
   "dataset": "Para-Lane",
   "shown": "real frame rotated by the exact homography (black = never seen by the real camera) | raw | released Difix | our Difix (ref) | our U-Net | NVIDIA Fixer",
   "caption": "For a pure rotation the real frame can be warped exactly; black regions are parts of the scene the recorded camera never saw. Inside the seen region every method stays close to the real frame (heading is not what breaks the splat); the newly revealed regions at the image border are where splats and fixers improvise.",
@@ -115,7 +115,7 @@
   "scenario": "road prior",
   "dataset": "Para-Lane",
   "shown": "real | raw splat | splat fitted with the LiDAR road-surface prior",
-  "caption": "A height/slope field fitted to LiDAR pulls road Gaussians onto the road plane and flattens them. No generative model is involved, so nothing can be invented; lane lines are sharper off-path.",
+  "caption": "A height/slope field fitted to LiDAR pulls road Gaussians onto the road plane and flattens them. No image generator is involved; lane lines are sharper off-path, while the splat's other errors remain (spurious vehicles one lane over: 0.061 per image, against 0.064 for the raw render).",
   "real_ground_truth": true,
   "attribution": "Data: Para-Lane (Ni et al., 3DV 2025), CC BY-NC 4.0. Renders/fixes: CS 566 course project, non-commercial."
  }
